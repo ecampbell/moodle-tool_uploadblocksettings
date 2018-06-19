@@ -27,10 +27,9 @@ defined('MOODLE_INTERNAL') || die;
 require_once($CFG->dirroot.'/lib/blocklib.php');
 
 /**
- * Validates and processes files for uploading a course block settings CSV file
+ * Validates and processes files for uploading a block settings CSV file
  *
- * Original code developed by Mark Johnson <mark.johnson@tauntons.ac.uk>
- * @copyright   2010 Tauntons College, UK
+ * @copyright   2018 Eoin Campbell
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class tool_uploadblocksettings_handler {
@@ -161,7 +160,7 @@ class tool_uploadblocksettings_handler {
                 continue;
             }
             // Check the block we're assigning exists.
-            if (!(block = $DB->get_record('block', array('name' => $blockname)))) {
+            if (!($block = $DB->get_record('block', array('name' => $blockname)))) {
                 $report[] = get_string('blocknotfound', 'tool_uploadblocksettings', $strings);
                 continue;
             }
@@ -169,20 +168,18 @@ class tool_uploadblocksettings_handler {
             $strings->courseid = $course->id;
             $strings->blockid = $block->id;
 
-/*
             if ($op == 'del') {
-                // If we're deleting, check the parent is already linked to the target, and remove the link.
+                // If we're deleting, check the block is already in the course, and remove it.
                 // Skip the line if they're not.
                 $instanceparams = array(
-                    'courseid' => $target->id,
-                    'customint1' => $parent->id,
-                    'enrol' => $method
+                    'courseid' => $course->id,
+                    'block' => $block->id
                 );
-                if ($instance = $DB->get_record('enrol', $instanceparams)) {
+                if ($instance = $DB->get_record('block', $instanceparams)) {
                     $enrol->delete_instance($instance);
-                    $report[] = get_string('reldeleted', 'tool_uploadblocksettings', $strings);
+                    $report[] = get_string('blockdeleted', 'tool_uploadblocksettings', $strings);
                 } else {
-                    $report[] = get_string('reldoesntexist', 'tool_uploadblocksettings', $strings);
+                    $report[] = get_string('blockdoesntexist', 'tool_uploadblocksettings', $strings);
                 }
             } else if ($op == 'upd') {
                 // If we're modifying, check the parent is already linked to the target, and change the status.
@@ -245,7 +242,6 @@ class tool_uploadblocksettings_handler {
                     $report[] = get_string('reladderror', 'tool_uploadblocksettings', $strings);
                 }
             }
-            */
         }
         fclose($file);
         return implode("<br/>", $report);

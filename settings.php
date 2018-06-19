@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 if ($hassiteconfig) {
-    $ADMIN->add('block', new admin_externalpage('tool_uploadblocksettings',
+    $ADMIN->add('courses', new admin_externalpage('tool_uploadblocksettings',
             get_string('pluginname', 'tool_uploadblocksettings'),
             new moodle_url('/admin/tool/uploadblocksettings/')
     ));
