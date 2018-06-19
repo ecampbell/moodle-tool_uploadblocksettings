@@ -10,7 +10,7 @@ You can also delete existing blocks from a course.
 
 ## Requirements ##
 
-This plugin requires Moodle 2.9+ from http://moodle.org
+This plugin requires Moodle 2.9+ from https://moodle.org
 
 
 ## Installation and Update ##
@@ -25,9 +25,9 @@ There are no special considerations required for updating the plugin.
 
 ### Uninstallation ###
 
-Uninstalling the plugin by going into the following:
+Uninstall the plugin by going into the following:
 
-__Administration &gt; Site administration &gt; Plugins &gt; Manage plugins &gt; Upload block settings__
+__Administration &gt; Site administration &gt; Plugins &gt; Plugins overview__
 
 ...and click Uninstall. You may also need to manually delete the following folder:
 
@@ -37,7 +37,7 @@ __Administration &gt; Site administration &gt; Plugins &gt; Manage plugins &gt; 
 
 There are no configurable settings for this plugin.
 
-Use the command __Administration &gt; Site administration &gt; Plugins &gt; Blocks &gt; Upload block settings__
+Use the command __Administration &gt; Site administration &gt; Courses &gt; Upload block settings__
 to upload a CSV file containing lines of the form:
 
     operation, course shortname, block name, region
