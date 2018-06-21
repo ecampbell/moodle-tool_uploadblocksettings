@@ -40,7 +40,7 @@ There are no configurable settings for this plugin.
 Use the command __Administration &gt; Site administration &gt; Courses &gt; Upload block settings__
 to upload a CSV file containing lines of the form:
 
-    operation, course shortname, block name, region
+    operation, course shortname, block name, region, weight
 
 ## License ##
 
