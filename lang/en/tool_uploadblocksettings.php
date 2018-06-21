@@ -24,26 +24,29 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['blockadded']              = '{$a->line} {$a->linenum} [{$a->oplabel}]: "{$a->blockname}" ({$a->courseid}) added to "{$a->coursename}" ({$a->courseid}).';
-$string['blockadderror']           = '{$a->line} {$a->linenum} [{$a->oplabel}]: Error adding "{$a->blockname}" to "{$a->coursename}" ({$a->courseid}). {$a->skipped}.';
-$string['blockalreadyexists']      = '{$a->line} {$a->linenum} [{$a->oplabel}]: "{$a->blockname}" ({$a->courseid}) already added to "{$a->coursename}" ({$a->courseid}). {$a->skipped}.';
-$string['blockdeleted']            = '{$a->line} {$a->linenum} [{$a->oplabel}]: Deleted "{$a->instancename}" method from "{$a->blockname}" ({$a->courseid}).';
-$string['blockdoesntexist']        = '{$a->line} {$a->linenum} [{$a->oplabel}]: "{$a->blockname}" ({$a->courseid}) not added to "{$a->coursename}" ({$a->courseid}), so can\'t be removed. {$a->skipped}.';
-$string['relupdated']            = '{$a->line} {$a->linenum} [{$a->oplabel}]: Updated "{$a->instancename}" method in "{$a->blockname}" ({$a->courseid}). {$a->status}.';
-$string['blocknotfound']        = '{$a->line} {$a->linenum} [{$a->oplabel}]: Block "{$a->blockname}" not found. {$a->skipped}.';
+$string['blockadded']            = '{$a->line} {$a->linenum} [{$a->oplabel}]: Added "{$a->blockname}" block to course "{$a->coursename}" ({$a->courseid}).';
+$string['blockadderror']         = '{$a->line} {$a->linenum} [{$a->oplabel}]: Error adding "{$a->blockname}" block to course "{$a->coursename}" ({$a->courseid}). {$a->skipped}.';
+$string['blockalreadyadded']    = '{$a->line} {$a->linenum} [{$a->oplabel}]: "{$a->blockname}" block already added to course "{$a->coursename}" ({$a->courseid}). {$a->skipped}.';
+$string['blockremoved']          = '{$a->line} {$a->linenum} [{$a->oplabel}]: Removed "{$a->blockname}" block from course "{$a->coursename}" ({$a->courseid}).';
+$string['blockdoesntexist']      = '{$a->line} {$a->linenum} [{$a->oplabel}]: "{$a->blockname}" ({$a->courseid}) not added to course "{$a->coursename}" ({$a->courseid}), so can\'t be removed. {$a->skipped}.';
+$string['blocknotinstalled']     = '{$a->line} {$a->linenum} [{$a->oplabel}]: Block "{$a->blockname}" not installed. {$a->skipped}.';
+$string['blocknotvalid']         = '{$a->line} {$a->linenum} [{$a->oplabel}]: Block "{$a->blockname}" is not valid. {$a->skipped}.';
 $string['coursenotfound']        = '{$a->line} {$a->linenum} [{$a->oplabel}]: Course "{$a->courseshortname}" not found. {$a->skipped}.';
 $string['csvfile'] = '';
 $string['csvfile_help']          = 'The format of the CSV file must be as follows:
 
 * Each line of the file contains one record.
-* Each record is a series of data separated by commas.
-* Required fields are operation, course shortname, block, region.
-* Allowed operations are add, del, upd.
-* Allowed regions are side-pre and side-post.';
+* Each record is a series of data in a fixed order separated by commas.
+* The required fields are operation, course shortname, block, region, weight.
+* The allowed operations are add, del, upd.
+* The allowed regions are side-pre and side-post.
+* The allowed weights are -10 to 10 (0 is neutral)';
 $string['heading']               = 'Upload course block settings from a CSV file';
 $string['invalidop']             = '{$a->line} {$a->linenum} [{$a->oplabel}]: Invalid operation "{$a->op}".';
 $string['pluginname']            = 'Upload block settings';
 $string['pluginname_help']       = 'Upload block settings from a CSV file to set block settings for a range of courses in a single operation.';
 $string['privacy:metadata']      = 'The Upload block settings administration tool does not store personal data.';
-$string['toofewcols']            = '{$a->line} {$a->linenum} [{$a->oplabel}]: Too few columns, expecting 6. {$a->skipped}.';
-$string['toomanycols']           = '{$a->line} {$a->linenum} [{$a->oplabel}]: Too many columns, expecting 6. {$a->skipped}.';
+$string['regionnotvalid']         = '{$a->line} {$a->linenum} [{$a->oplabel}]: Region "{$a->region}" is not valid. {$a->skipped}.';
+$string['toofewcols']            = '{$a->line} {$a->linenum} [{$a->oplabel}]: Too few columns, expecting 5. {$a->skipped}.';
+$string['toomanycols']           = '{$a->line} {$a->linenum} [{$a->oplabel}]: Too many columns, expecting 5. {$a->skipped}.';
+$string['weightnotvalid']         = '{$a->line} {$a->linenum} [{$a->oplabel}]: Weight "{$a->weight}" is not valid. {$a->skipped}.';
