@@ -157,8 +157,23 @@ class tool_uploadblocksettings_handler {
                 continue;
             }
 
+            // Check the course we're assigning the block to exists.
+            if (!$course = $DB->get_record('course', array('shortname' => $courseshortname))) {
+                $report[] = get_string('coursenotfound', 'tool_uploadblocksettings', $strings);
+                continue;
+            }
+            // Set up defaults for the course context.
+            $courseblock = new tool_uploadblocksettings_courseblock($course);
+            $strings->courseid = $course->id;
+
+            // Check that the block we're adding is installed and available.
+            if (!($courseblock->is_known_block_type($block))) {
+                $report[] = get_string('blocknotinstalled', 'tool_uploadblocksettings', $strings);
+                continue;
+            }
+
             // Check that a valid region is specified.
-            if (!in_array($region, array('side-pre', 'side-post'))) {
+            if (!$courseblock->is_known_region($region)) {
                 $report[] = get_string('invalidregion', 'tool_uploadblocksettings', $strings);
                 continue;
             }
@@ -169,20 +184,7 @@ class tool_uploadblocksettings_handler {
                 continue;
             }
 
-            // Check the course we're assigning the block to exists.
-            if (!$course = $DB->get_record('course', array('shortname' => $courseshortname))) {
-                $report[] = get_string('coursenotfound', 'tool_uploadblocksettings', $strings);
-                continue;
-            }
-
-            // Check that the block we're adding is installed.
-            if (!($block = $DB->get_record('block', array('name' => $blockname)))) {
-                $report[] = get_string('blocknotinstalled', 'tool_uploadblocksettings', $strings);
-                continue;
-            }
-
-            $strings->courseid = $course->id;
-
+            // Checks complete, now to do the work.
             // Get the course context so that we can identify its block instances.
             $context = context_course::instance($course->id);
             $instanceparams = array(
@@ -190,13 +192,13 @@ class tool_uploadblocksettings_handler {
                 'blockname' => $blockname,
                 'pagetypepattern' => 'course-view-*'
             );
+
             if ($op == 'del') {
                 // Check the block is added to the course, and remove it.
-
                 // Get the block instances (may be more than one).
                 if ($instances = $DB->get_records('block_instances', $instanceparams)) {
                     foreach ($instances as $instance) {
-                        blocks_delete_instance($instance);
+                        $courseblock->delete_instance($instance);
                     }
                     $report[] = get_string('blockremoved', 'tool_uploadblocksettings', $strings);
                 } else {
@@ -220,17 +222,7 @@ class tool_uploadblocksettings_handler {
                     $report[] = get_string('blockalreadyadded', 'tool_uploadblocksettings', $strings);
                 } else {
                     // Create a block instance and add it to the database.
-                    $blockinstance = new stdClass;
-                    $blockinstance->blockname = $blockname;
-                    $blockinstance->parentcontextid = $context->id;
-                    $blockinstance->showinsubcontexts = false;
-                    $blockinstance->pagetypepattern = 'course-view-*';
-                    $blockinstance->subpagepattern = null;
-                    $blockinstance->defaultregion = $region;
-                    $blockinstance->defaultweight = $weight;
-                    $blockinstance->configdata = '';
-                    $blockinstance->id = $DB->insert_record('block_instances', $blockinstance);
-
+                    $courseblock->add_block($blockname, $region, $weight);
                     $report[] = get_string('blockadded', 'tool_uploadblocksettings', $strings);
                 }
             }
