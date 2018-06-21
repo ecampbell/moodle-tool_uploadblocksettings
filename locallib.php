@@ -112,11 +112,11 @@ class tool_uploadblocksettings_handler {
             $line++;
 
             // Check for the correct number of columns.
-            if (count($csvrow) < 6) {
+            if (count($csvrow) < 5) {
                 $report[] = get_string('toofewcols', 'tool_uploadblocksettings', $line);
                 continue;
             }
-            if (count($csvrow) > 6) {
+            if (count($csvrow) > 5) {
                 $report[] = get_string('toomanycols', 'tool_uploadblocksettings', $line);
                 continue;
             }
@@ -126,6 +126,7 @@ class tool_uploadblocksettings_handler {
             $courseshortname = clean_param($csvrow[1], PARAM_TEXT);
             $blockname = clean_param($csvrow[2], PARAM_TEXT);
             $region = clean_param($csvrow[3], PARAM_TEXT);
+            $weight = (int) clean_param($csvrow[4], PARAM_INT);
 
             // Prepare reporting message strings.
             $strings = new stdClass;
@@ -133,6 +134,8 @@ class tool_uploadblocksettings_handler {
             $strings->op = $op;
             $strings->coursename = $courseshortname;
             $strings->blockname = $blockname;
+            $strings->region = $region;
+            $strings->weight = $weight;
             $strings->line = get_string('csvline', 'tool_uploadcourse');
             $strings->skipped = get_string('skipped');
 
@@ -154,92 +157,91 @@ class tool_uploadblocksettings_handler {
                 continue;
             }
 
+            // Check that a valid region is specified.
+            if (!in_array($region, array('side-pre', 'side-post'))) {
+                $report[] = get_string('invalidregion', 'tool_uploadblocksettings', $strings);
+                continue;
+            }
+
+            // Check that a valid weight is specified.
+            if (!is_int($weight) || $weight > 10 || $weight < -10 ) {
+                $report[] = get_string('invalidweight', 'tool_uploadblocksettings', $strings);
+                continue;
+            }
+
             // Check the course we're assigning the block to exists.
-            if (!$course = $DB->get_record('course', array('shortname' => $targetshortname))) {
+            if (!$course = $DB->get_record('course', array('shortname' => $courseshortname))) {
                 $report[] = get_string('coursenotfound', 'tool_uploadblocksettings', $strings);
                 continue;
             }
-            // Check the block we're assigning exists.
+
+            // Check that the block we're adding is installed.
             if (!($block = $DB->get_record('block', array('name' => $blockname)))) {
-                $report[] = get_string('blocknotfound', 'tool_uploadblocksettings', $strings);
+                $report[] = get_string('blocknotinstalled', 'tool_uploadblocksettings', $strings);
                 continue;
             }
 
             $strings->courseid = $course->id;
-            $strings->blockid = $block->id;
+            // $strings->blockid = $block->id;
 
+            // Get the course context so that we can identify its block instances.
+            $context = context_course::instance($course->id);
+            $instanceparams = array(
+                'parentcontextid' => $context->id,
+                'blockname' => $blockname,
+                'pagetypepattern' => 'course-view-*'
+            );
             if ($op == 'del') {
-                // If we're deleting, check the block is already in the course, and remove it.
-                // Skip the line if they're not.
-                $instanceparams = array(
-                    'courseid' => $course->id,
-                    'block' => $block->id
-                );
-                if ($instance = $DB->get_record('block', $instanceparams)) {
-                    $enrol->delete_instance($instance);
-                    $report[] = get_string('blockdeleted', 'tool_uploadblocksettings', $strings);
+                // Check the block is added to the course, and remove it.
+
+                // Get the block instances (may be more than one).
+                if ($instances = $DB->get_records('block_instances', $instanceparams)) {
+                    foreach ($instances as $instance) {
+                        blocks_delete_instance($instance);
+                    }
+                    $report[] = get_string('blockremoved', 'tool_uploadblocksettings', $strings);
                 } else {
                     $report[] = get_string('blockdoesntexist', 'tool_uploadblocksettings', $strings);
                 }
             } else if ($op == 'upd') {
-                // If we're modifying, check the parent is already linked to the target, and change the status.
-                // Skip the line if they're not.
-                $instanceparams = array(
-                    'courseid' => $target->id,
-                    'customint1' => $parent->id,
-                    'enrol' => $method
-                );
-                if ($instance = $DB->get_record('enrol', $instanceparams)) {
-                    // Found a valid  instance, so  enable or disable it.
-                    $strings->instancename = $enrol->get_instance_name($instance);
-                    if ($disabledstatus == '1') {
-                        $strings->status = get_string('statusdisabled', 'enrol_manual');
+                // We can modify the location or the weighting of a block.
+                // Get the block instances (may be more than one).
+                if ($instances = $DB->get_records('block_instances', $instanceparams)) {
+                    foreach ($instances as $instance) {
+                        blocks_delete_instance($instance);
                     }
-                    $enrol->update_status($instance, $disabledstatus);
-                    $report[] = get_string('relupdated', 'tool_uploadblocksettings', $strings);
+                    $report[] = get_string('blockremoved', 'tool_uploadblocksettings', $strings);
                 } else {
-                    $report[] = get_string('reldoesntexist', 'tool_uploadblocksettings', $strings);
+                    $report[] = get_string('blockdoesntexist', 'tool_uploadblocksettings', $strings);
                 }
             } else if ($op == 'add') {
-                // If we're adding, check that the parent is not already linked to the target, and add them.
-                // Skip the line if they are.
-                $instanceparams1 = array(
-                    'courseid' => $parent->id,
-                    'customint1' => $target->id,
-                    'enrol' => $method
-                );
-                $instanceparams2 = array(
-                    'courseid' => $target->id,
-                    'customint1' => $parent->id,
-                    'enrol' => $method
-                );
-                if ($method == 'meta' && ($instance = $DB->get_record('enrol', $instanceparams1))) {
-                    $report[] = get_string('targetisparent', 'tool_uploadblocksettings', $strings);
-                } else if ($instance = $DB->get_record('enrol', $instanceparams2)) {
-                    $report[] = get_string('relalreadyexists', 'tool_uploadblocksettings', $strings);
-                } else if ($instance = $enrol->add_instance($target, array('customint1' => $parent->id))) {
-                    // Successfully added a valid new instance, so now instantiate it.
-                    // Synchronise the enrolment.
-                    if ($method == 'meta') {
-                        enrol_meta_sync($instance->courseid);
-                    } else if ($method == 'cohort') {
-                        $trace = new null_progress_trace();
-                        enrol_cohort_sync($trace, $instance->courseid);
-                        $trace->finished();
-                    }
-
-                    // Is it initially disabled?
-                    if ($disabledstatus == '1') {
-                        $instance = $DB->get_record('enrol', $instanceparams2);
-                        $enrol->update_status($instance, $disabledstatus);
-                        $strings->status = get_string('statusdisabled', 'enrol_manual');
-                    }
-
-                    $strings->instancename = $enrol->get_instance_name($instance);
-                    $report[] = get_string('reladded', 'tool_uploadblocksettings', $strings);
+                // If we're adding, check that the block is not already added to the course.
+                // Skip the line if it is.
+                if ($instances = $DB->get_records('block_instances', $instanceparams)) {
+                    $report[] = get_string('blockalreadyadded', 'tool_uploadblocksettings', $strings);
                 } else {
-                    // Instance not added for some reason, so report an error and go to the next line.
-                    $report[] = get_string('reladderror', 'tool_uploadblocksettings', $strings);
+                    // Create a block instance and add it to the database
+                    $blockinstance = new stdClass;
+                    $blockinstance->blockname = $blockname;
+                    $blockinstance->parentcontextid = $context->id;
+                    $blockinstance->showinsubcontexts = false;
+                    $blockinstance->pagetypepattern = 'course-view-*';
+                    $blockinstance->subpagepattern = NULL;
+                    $blockinstance->defaultregion = $region;
+                    $blockinstance->defaultweight = $weight;
+                    $blockinstance->configdata = '';
+                    $blockinstance->id = $DB->insert_record('block_instances', $blockinstance);
+
+                    // Don't think creating a block instance is necessary
+                    // Ensure the block context is created.
+                    // context_block::instance($blockinstance->id);
+            
+                    // If the new instance was created, allow it to do additional setup
+                    // if ($block = block_instance($blockname, $blockinstance)) {
+                    //     $block->instance_create();
+                    // }
+
+                    $report[] = get_string('blockadded', 'tool_uploadblocksettings', $strings);
                 }
             }
         }
@@ -249,7 +251,7 @@ class tool_uploadblocksettings_handler {
 }
 
 /**
- * An exception for reporting errors when processing metalink files
+ * An exception for reporting errors
  *
  * Extends the moodle_exception with an http property, to store an HTTP error
  * code for responding to AJAX requests.
