@@ -182,7 +182,6 @@ class tool_uploadblocksettings_handler {
             }
 
             $strings->courseid = $course->id;
-            // $strings->blockid = $block->id;
 
             // Get the course context so that we can identify its block instances.
             $context = context_course::instance($course->id);
@@ -220,26 +219,17 @@ class tool_uploadblocksettings_handler {
                 if ($instances = $DB->get_records('block_instances', $instanceparams)) {
                     $report[] = get_string('blockalreadyadded', 'tool_uploadblocksettings', $strings);
                 } else {
-                    // Create a block instance and add it to the database
+                    // Create a block instance and add it to the database.
                     $blockinstance = new stdClass;
                     $blockinstance->blockname = $blockname;
                     $blockinstance->parentcontextid = $context->id;
                     $blockinstance->showinsubcontexts = false;
                     $blockinstance->pagetypepattern = 'course-view-*';
-                    $blockinstance->subpagepattern = NULL;
+                    $blockinstance->subpagepattern = null;
                     $blockinstance->defaultregion = $region;
                     $blockinstance->defaultweight = $weight;
                     $blockinstance->configdata = '';
                     $blockinstance->id = $DB->insert_record('block_instances', $blockinstance);
-
-                    // Don't think creating a block instance is necessary
-                    // Ensure the block context is created.
-                    // context_block::instance($blockinstance->id);
-            
-                    // If the new instance was created, allow it to do additional setup
-                    // if ($block = block_instance($blockname, $blockinstance)) {
-                    //     $block->instance_create();
-                    // }
 
                     $report[] = get_string('blockadded', 'tool_uploadblocksettings', $strings);
                 }
