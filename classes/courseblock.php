@@ -51,7 +51,7 @@ class tool_uploadblocksettings_courseblock {
     private $context;
 
     /** @var array region name => 1.*/
-    protected $regions = array(BLOCK_POS_LEFT, BLOCK_POS_RIGHT);
+    public $regions = array(BLOCK_POS_LEFT => "admin", BLOCK_POS_RIGHT => "user");
 
     /** @var array will be $DB->get_records('blocks') */
     protected $allblocks = null;
@@ -71,7 +71,7 @@ class tool_uploadblocksettings_courseblock {
     public function __construct($course) {
         $this->course = $course;
         // Get the course context so that we can identify its block instances.
-        $context = context_course::instance($course->id);
+        $this->context = context_course::instance($course->id);
     }
     
     /**
@@ -84,7 +84,7 @@ class tool_uploadblocksettings_courseblock {
      * @param string|null $pagetypepattern which page types this block should appear on. Defaults to just the current page type.
      * @param string|null $subpagepattern which subpage this block should appear on. NULL = any (the default), otherwise only the specified subpage.
      */
-    public function add_block($blockname, $region, $weight, $showinsubcontexts, $pagetypepattern = NULL, $subpagepattern = NULL) {
+    public function add_block($blockname, $region, $weight, $showinsubcontexts = false, $pagetypepattern = NULL, $subpagepattern = NULL) {
         global $DB;
 
         if (empty($pagetypepattern)) {
@@ -93,7 +93,7 @@ class tool_uploadblocksettings_courseblock {
 
         $blockinstance = new stdClass;
         $blockinstance->blockname = $blockname;
-        $blockinstance->parentcontextid = $context->id;
+        $blockinstance->parentcontextid = $this->context->id;
         $blockinstance->showinsubcontexts = $showinsubcontexts;
         $blockinstance->pagetypepattern = $pagetypepattern;
         $blockinstance->subpagepattern = $subpagepattern;
