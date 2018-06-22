@@ -63,7 +63,7 @@ class tool_uploadblocksettings_courseblock {
      */
     protected $addableblocks = null;
 
- /**
+    /**
      * Constructor, sets the filename
      *
      * @param string $filename
@@ -73,18 +73,15 @@ class tool_uploadblocksettings_courseblock {
         // Get the course context so that we can identify its block instances.
         $this->context = context_course::instance($course->id);
     }
-    
+
     /**
      * Add a block to a course page.
      *
      * @param string $blockname The type of block to add.
      * @param string $region the block region on this page to add the block to.
      * @param integer $weight determines the order where this block appears in the region.
-     * @param boolean $showinsubcontexts whether this block appears in subcontexts, or just the current context.
-     * @param string|null $pagetypepattern which page types this block should appear on. Defaults to just the current page type.
-     * @param string|null $subpagepattern which subpage this block should appear on. NULL = any (the default), otherwise only the specified subpage.
      */
-    public function add_block($blockname, $region, $weight, $showinsubcontexts = false, $pagetypepattern = NULL, $subpagepattern = NULL) {
+    public function add_block($blockname, $region, $weight) {
         global $DB;
 
         if (empty($pagetypepattern)) {
@@ -94,9 +91,9 @@ class tool_uploadblocksettings_courseblock {
         $blockinstance = new stdClass;
         $blockinstance->blockname = $blockname;
         $blockinstance->parentcontextid = $this->context->id;
-        $blockinstance->showinsubcontexts = $showinsubcontexts;
-        $blockinstance->pagetypepattern = $pagetypepattern;
-        $blockinstance->subpagepattern = $subpagepattern;
+        $blockinstance->showinsubcontexts = false;
+        $blockinstance->pagetypepattern = null;
+        $blockinstance->subpagepattern = null;
         $blockinstance->defaultregion = $region;
         $blockinstance->defaultweight = $weight;
         $blockinstance->configdata = '';
@@ -118,7 +115,10 @@ class tool_uploadblocksettings_courseblock {
         if (!$skipblockstables) {
             $DB->delete_records('block_positions', array('blockinstanceid' => $instance->id));
             $DB->delete_records('block_instances', array('id' => $instance->id));
-            $DB->delete_records_list('user_preferences', 'name', array('block'.$instance->id.'hidden','docked_block_instance_'.$instance->id));
+            $DB->delete_records_list('user_preferences', 'name', array(
+                        'block' . $instance->id . 'hidden', 
+                        'docked_block_instance_' . $instance->id
+                        ));
         }
     }
 
@@ -206,7 +206,7 @@ class tool_uploadblocksettings_courseblock {
 
         // See blocklib/get_addable_blocks() for original code.
         $unaddableblocks = self::get_undeletable_block_types();
-        foreach($allblocks as $block) {
+        foreach ($allblocks as $block) {
             if ($block->visible && !in_array($block->name, $unaddableblocks) &&
                     ($bi->instance_allow_multiple() || !$this->is_block_present($block->name)) &&
                     blocks_name_allowed_in_format($block->name, $pageformat) &&
@@ -258,8 +258,7 @@ class tool_uploadblocksettings_courseblock {
      */
     protected function ensure_instances_exist($region) {
         if (!array_key_exists($region, $this->blockinstances)) {
-            $this->blockinstances[$region] =
-                    $this->create_block_instances($this->birecordsbyregion[$region]);
+            $this->blockinstances[$region] = $this->create_block_instances($this->birecordsbyregion[$region]);
         }
     }
 
