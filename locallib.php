@@ -24,8 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-require_once($CFG->dirroot.'/lib/blocklib.php');
-
 /**
  * Validates and processes files for uploading a block settings CSV file
  *
@@ -134,6 +132,11 @@ class tool_uploadblocksettings_handler {
             $strings->op = $op;
             $strings->coursename = $courseshortname;
             $strings->blockname = $blockname;
+            if ($blockname == 'administration') {
+                $strings->blocktitle = get_string('administration');
+            } else {
+                $strings->blocktitle = get_string('pluginname', 'block_' . $blockname);
+            }
             $strings->region = $region;
             $strings->weight = $weight;
             $strings->line = get_string('csvline', 'tool_uploadcourse');
@@ -167,20 +170,20 @@ class tool_uploadblocksettings_handler {
             $strings->courseid = $course->id;
 
             // Check that the block we're adding is installed and available.
-            if (!($courseblock->is_known_block_type($block))) {
+            if (!($courseblock->is_known_block_type($blockname))) {
                 $report[] = get_string('blocknotinstalled', 'tool_uploadblocksettings', $strings);
                 continue;
             }
 
             // Check that a valid region is specified.
             if (!$courseblock->is_known_region($region)) {
-                $report[] = get_string('invalidregion', 'tool_uploadblocksettings', $strings);
+                $report[] = get_string('regionnotvalid', 'tool_uploadblocksettings', $strings);
                 continue;
             }
 
             // Check that a valid weight is specified.
             if (!is_int($weight) || $weight > 10 || $weight < -10 ) {
-                $report[] = get_string('invalidweight', 'tool_uploadblocksettings', $strings);
+                $report[] = get_string('weightnotvalid', 'tool_uploadblocksettings', $strings);
                 continue;
             }
 

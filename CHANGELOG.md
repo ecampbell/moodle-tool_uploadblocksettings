@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2018-06-22
+### Added
+- Improved error-checking using courseblock class, derived from lib/blocklib.php
+
 ## [0.2.0] - 2018-06-21
 ### Added
 - Working version for adding and deleting. More error-checking required.
