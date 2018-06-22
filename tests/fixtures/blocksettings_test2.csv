@@ -1,0 +1,5 @@
+del,Test Course,participants,side-post,-10
+add,Test Course,people,side-post,-10
+del,Test Course,search_forums,side-post,0
+add,Test Course,navigation,side-pre,0
+del,Test Course,administration,side-pre,0
