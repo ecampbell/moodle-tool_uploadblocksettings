@@ -6,41 +6,25 @@ Feature: Setting course blocks by uploading a CSV file.
 
     Background:
         Given the following "courses" exist:
-            | fullname | shortname | summary | category | idnumber |
-            | Course 1 | C101      | Prove the upload block settings plugin works | 0 | idnum1 |
-            | Course 2 | C102      | Prove the upload block settings plugin works - Target Course | 0 | idnum2 |
+            | fullname | shortname  | category | idnumber |
+            | Course 1 | C101       | 1        | idnum1   |
+            | Course 2 | C102       | 1        | idnum2   |
         Given the following "users" exist:
-            | username    | firstname | lastname | email            |
+            | username    | firstname | lastname | email                |
             | student1    | Sam       | Student  | student1@example.com |
             | teacher1    | Teacher   | One      | teacher1@example.com |
-        Given the following "cohorts" exist:
-            | name     | idnumber |
-            | Cohort 1 | cohort1  |
         Given the following "course enrolments" exist:
-            | user        | course | role    |
-            | student1    | C101   | student |
-            | teacher1    | C101   | editingteacher |  
-        And I log in as "admin"
-        And I navigate to "Manage enrol plugins" node in "Site administration > Plugins > Enrolments"
-        And I click on "Enable" "link" in the "Course meta link" "table_row"
-        And I log out 
+            | user        | course | role           |
+            | student1    | C101   | student        |
+            | teacher1    | C101   | editingteacher |
    
     @_file_upload
     Scenario: Manager can upload a CSV file using the upload block settings plugin
         When I log in as "admin"
-        And I navigate to "Upload enrolment methods" node in "Site administration > Plugins > Enrolments"
-        And I upload "admin/tool/uploadblocksettings/tests/fixtures/enrolmentmethods_test.csv" file to "File" filemanager
+        And I navigate to "Upload block settings" node in "Site administration > Courses"
+        And I upload "admin/tool/uploadblocksettings/tests/fixtures/blocksettings_test.csv" file to "File" filemanager
         And I click on "id_submitbutton" "button"
         And I follow "Courses"
-        And I follow "Course 2"
-        And I expand "Users" node
-        And I follow "Enrolled users"
-        Then I should see "student1"
-        And I should see "teacher1"
-
-    Scenario: Warning should be displayed a message if meta enrolment is not activated
-        Given I log in as "admin"
-        And I navigate to "Manage enrol plugins" node in "Site administration > Plugins > Enrolments"
-        And I click on "Disable" "link" in the "Course meta link" "table_row"
-        And I navigate to "Upload enrolment methods" node in "Site administration > Plugins > Enrolments"
-        Then I should see "The ""Course meta link"" enrolment plugin is disabled"
+        And I follow "Course 1"
+        Then I should see "Calendar"
+        And I should not see "Participants"
