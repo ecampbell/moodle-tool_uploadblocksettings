@@ -24,13 +24,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['blockadded']            = '{$a->line} {$a->linenum} [{$a->oplabel}]: Added "{$a->blockname}" block to course "{$a->coursename}" ({$a->courseid}).';
-$string['blockadderror']         = '{$a->line} {$a->linenum} [{$a->oplabel}]: Error adding "{$a->blockname}" block to course "{$a->coursename}" ({$a->courseid}). {$a->skipped}.';
-$string['blockalreadyadded']    = '{$a->line} {$a->linenum} [{$a->oplabel}]: "{$a->blockname}" block already added to course "{$a->coursename}" ({$a->courseid}). {$a->skipped}.';
-$string['blockremoved']          = '{$a->line} {$a->linenum} [{$a->oplabel}]: Removed "{$a->blockname}" block from course "{$a->coursename}" ({$a->courseid}).';
-$string['blockdoesntexist']      = '{$a->line} {$a->linenum} [{$a->oplabel}]: "{$a->blockname}" ({$a->courseid}) not added to course "{$a->coursename}" ({$a->courseid}), so can\'t be removed. {$a->skipped}.';
-$string['blocknotinstalled']     = '{$a->line} {$a->linenum} [{$a->oplabel}]: Block "{$a->blockname}" not installed. {$a->skipped}.';
-$string['blocknotvalid']         = '{$a->line} {$a->linenum} [{$a->oplabel}]: Block "{$a->blockname}" is not valid. {$a->skipped}.';
+$string['blockadded']            = '{$a->line} {$a->linenum} [{$a->oplabel}]: Block "{$a->blocktitle}" ({$a->blockname}) added to course "{$a->coursename}" ({$a->courseid}).';
+$string['blockadderror']         = '{$a->line} {$a->linenum} [{$a->oplabel}]: Error: block "{$a->blocktitle}" ({$a->blockname}) not added to course "{$a->coursename}" ({$a->courseid}). {$a->skipped}.';
+$string['blockalreadyadded']     = '{$a->line} {$a->linenum} [{$a->oplabel}]: Block "{$a->blocktitle}" ({$a->blockname}) already added to course "{$a->coursename}" ({$a->courseid}). {$a->skipped}.';
+$string['blockremoved']          = '{$a->line} {$a->linenum} [{$a->oplabel}]: Block "{$a->blocktitle}" ({$a->blockname}) removed from course "{$a->coursename}" ({$a->courseid}).';
+$string['blockdoesntexist']      = '{$a->line} {$a->linenum} [{$a->oplabel}]: Block "{$a->blocktitle}" ({$a->blockname}) not added to course "{$a->coursename}" ({$a->courseid}), so can\'t be removed. {$a->skipped}.';
+$string['blocknotinstalled']     = '{$a->line} {$a->linenum} [{$a->oplabel}]: Block "{$a->blocktitle}" ({$a->blockname}) block not installed. {$a->skipped}.';
+$string['blocknotvalid']         = '{$a->line} {$a->linenum} [{$a->oplabel}]: Block "{$a->blocktitle}" ({$a->blockname}) is not valid. {$a->skipped}.';
 $string['coursenotfound']        = '{$a->line} {$a->linenum} [{$a->oplabel}]: Course "{$a->courseshortname}" not found. {$a->skipped}.';
 $string['csvfile'] = '';
 $string['csvfile_help']          = 'The format of the CSV file must be as follows:
@@ -46,7 +46,7 @@ $string['invalidop']             = '{$a->line} {$a->linenum} [{$a->oplabel}]: In
 $string['pluginname']            = 'Upload block settings';
 $string['pluginname_help']       = 'Upload block settings from a CSV file to set block settings for a range of courses in a single operation.';
 $string['privacy:metadata']      = 'The Upload block settings administration tool does not store personal data.';
-$string['regionnotvalid']         = '{$a->line} {$a->linenum} [{$a->oplabel}]: Region "{$a->region}" is not valid. {$a->skipped}.';
+$string['regionnotvalid']        = '{$a->line} {$a->linenum} [{$a->oplabel}]: Region "{$a->region}" is not valid. {$a->skipped}.';
 $string['toofewcols']            = '{$a->line} {$a->linenum} [{$a->oplabel}]: Too few columns, expecting 5. {$a->skipped}.';
 $string['toomanycols']           = '{$a->line} {$a->linenum} [{$a->oplabel}]: Too many columns, expecting 5. {$a->skipped}.';
-$string['weightnotvalid']         = '{$a->line} {$a->linenum} [{$a->oplabel}]: Weight "{$a->weight}" is not valid. {$a->skipped}.';
+$string['weightnotvalid']        = '{$a->line} {$a->linenum} [{$a->oplabel}]: Weight "{$a->weight}" is not valid. {$a->skipped}.';
