@@ -132,11 +132,7 @@ class tool_uploadblocksettings_handler {
             $strings->op = $op;
             $strings->coursename = $courseshortname;
             $strings->blockname = $blockname;
-            if ($blockname == 'administration') {
-                $strings->blocktitle = get_string('administration');
-            } else {
-                $strings->blocktitle = get_string('pluginname', 'block_' . $blockname);
-            }
+            $strings->blocktitle = get_string('pluginname', 'block_' . $blockname);
             $strings->region = $region;
             $strings->weight = $weight;
             $strings->line = get_string('csvline', 'tool_uploadcourse');
