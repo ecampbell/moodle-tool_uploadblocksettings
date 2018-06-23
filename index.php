@@ -17,13 +17,11 @@
 /**
  * Displays the form and processes the form submission.
  *
- *
  * @package    tool_uploadblocksettings
  * @copyright  2018 Eoin Campbell
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Include config.php.
 require_once(__DIR__.'/../../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 
