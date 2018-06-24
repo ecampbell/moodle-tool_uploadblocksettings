@@ -102,6 +102,10 @@ class tool_uploadblocksettings_handler {
         // Set a counter so we can report line numbers for errors.
         $line = 0;
 
+        // Remember the last course, to avoid reloading all blocks on each line.
+        $previous_course = '';
+        $courseblock = null;
+
         // Open the file.
         $file = $this->open_file();
 
@@ -132,7 +136,6 @@ class tool_uploadblocksettings_handler {
             $strings->op = $op;
             $strings->coursename = $courseshortname;
             $strings->blockname = $blockname;
-            $strings->blocktitle = get_string('pluginname', 'block_' . $blockname);
             $strings->region = $region;
             $strings->weight = $weight;
             $strings->line = get_string('csvline', 'tool_uploadcourse');
@@ -162,14 +165,25 @@ class tool_uploadblocksettings_handler {
                 continue;
             }
             // Set up defaults for the course context.
-            $courseblock = new tool_uploadblocksettings_courseblock($course);
+            if($courseshortname != $previous_course) {
+                $courseblock = new tool_uploadblocksettings_courseblock($course);
+                // Get the list of fixed blocks, i.e. Administration and Navigation.
+                $protected_blocks = $courseblock->get_undeletable_block_types();
+            }
             $strings->courseid = $course->id;
+            foreach ($protected_blocks as $pblock) {
+                if ($pblock == $blockname && $op != 'mod') {
+                    $report[] = get_string('operationnotvalid', 'tool_uploadblocksettings', $strings);
+                    continue;
+                }
+            }
 
             // Check that the block we're adding is installed and available.
             if (!($courseblock->is_known_block_type($blockname))) {
                 $report[] = get_string('blocknotinstalled', 'tool_uploadblocksettings', $strings);
                 continue;
             }
+            $strings->blocktitle = get_string('pluginname', 'block_' . $blockname);
 
             // Check that a valid region is specified.
             if (!$courseblock->is_known_region($region)) {
@@ -183,22 +197,14 @@ class tool_uploadblocksettings_handler {
                 continue;
             }
 
-            // Checks complete, now to do the work.
-            // Get the course context so that we can identify its block instances.
-            $context = context_course::instance($course->id);
-            $instanceparams = array(
-                'parentcontextid' => $context->id,
-                'blockname' => $blockname,
-                'pagetypepattern' => 'course-view-*'
-            );
-
+            // Initial checks complete, now attempt to implement each operation.
             if ($op == 'del') {
-                // Check the block is added to the course, and remove it.
-                // Get the block instances (may be more than one).
-                if ($instances = $DB->get_records('block_instances', $instanceparams)) {
-                    foreach ($instances as $instance) {
-                        $courseblock->delete_instance($instance);
-                    }
+                // Check the block is added to the course, and can be removed before deleting it.
+
+                // Get the block instance(s) (may be more than one, but we're not thinking about that for the moment).
+                if ($courseblock->is_block_present($blockname)) {
+                    $block = $courseblock->block_instance($blockname);
+                    $courseblock->blocks_delete_instance($block);
                     $report[] = get_string('blockremoved', 'tool_uploadblocksettings', $strings);
                 } else {
                     $report[] = get_string('blockdoesntexist', 'tool_uploadblocksettings', $strings);
@@ -206,18 +212,22 @@ class tool_uploadblocksettings_handler {
             } else if ($op == 'upd') {
                 // We can modify the location or the weighting of a block.
                 // Get the block instances (may be more than one).
-                if ($instances = $DB->get_records('block_instances', $instanceparams)) {
-                    foreach ($instances as $instance) {
-                        blocks_delete_instance($instance);
-                    }
-                    $report[] = get_string('blockremoved', 'tool_uploadblocksettings', $strings);
+                if ($courseblock->is_block_present($blockname)) {
+                    $block = $courseblock->block_instance($blockname);
+                    $courseblock->reposition_block($block, $region, $weight);
+                    $report[] = get_string('blockmoved', 'tool_uploadblocksettings', $strings);
                 } else {
                     $report[] = get_string('blockdoesntexist', 'tool_uploadblocksettings', $strings);
                 }
             } else if ($op == 'add') {
-                // If we're adding, check that the block is not already added to the course.
-                // Skip the line if it is.
-                if ($instances = $DB->get_records('block_instances', $instanceparams)) {
+                // Skip if the block is already added to the course, or cannot be deleted.
+                foreach ($protected_blocks as $pblock) {
+                    if ($pblock->name == $blockname) {
+                        $report[] = get_string('operationnotvalid', 'tool_uploadblocksettings', $strings);
+                        continue;
+                    }
+                }
+                if ($courseblock->is_block_present($blockname)) {
                     $report[] = get_string('blockalreadyadded', 'tool_uploadblocksettings', $strings);
                 } else {
                     // Create a block instance and add it to the database.
