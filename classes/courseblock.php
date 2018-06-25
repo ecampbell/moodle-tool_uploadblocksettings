@@ -91,6 +91,9 @@ class tool_uploadblocksettings_courseblock {
         // Initialise the block array with the blocks from this course.
         $this->load_blocks(false);
         // error_log("tool_uploadblocksettings_courseblock: " . print_r($this->birecordsbyregion, true));
+        foreach ($this->get_regions() as $region) {
+            $this->ensure_instances_exist($region);
+        }
     }
 
     /**
@@ -110,31 +113,35 @@ class tool_uploadblocksettings_courseblock {
      * @return array block name => record from block table.
      */
     public function get_addable_blocks() {
+
+        error_log("get_addable_blocks()");
         if (!is_null($this->addableblocks)) {
-            error_log("get_addable_blocks() -> " . print_r($this->addableblocks, true));
+            error_log("get_addable_blocks() -> Done");
             return $this->addableblocks;
         }
 
         // Lazy load.
         $this->addableblocks = array();
-
         $allblocks = $this->get_installed_blocks();
         if (empty($allblocks)) {
             return $this->addableblocks;
         }
 
-        // Installed blocks - undeletable - once-only blocks already added to the course.
-        // Should also remove blocks required by theme, but that's too hard for the moment.
         $unaddableblocks = self::get_undeletable_block_types();
+        $addableblocklist = "";
         foreach ($allblocks as $block) {
+            if (!$bi = block_instance($block->name)) {
+                continue;
+            }
             if ($block->visible && !in_array($block->name, $unaddableblocks) &&
                 ($bi->instance_allow_multiple() || !$this->is_block_present($block->name))) {
                 $block->title = $bi->get_title();
                 $this->addableblocks[$block->name] = $block;
+                $addableblocklist .= "[$block->name] \"$block->title\" (". $bi->instance_allow_multiple() . ")\n";
             }
         }
-
         core_collator::asort_objects_by_property($this->addableblocks, 'title');
+        error_log("get_addable_blocks() -> $addableblocklist");
         return $this->addableblocks;
     }
 
@@ -146,7 +153,7 @@ class tool_uploadblocksettings_courseblock {
      */
     public function is_block_present($blockname) {
         if (empty($this->blockinstances)) {
-            error_log("is_block_present(blockname = " . $blockname . ") -> false (empty)");
+            error_log("is_block_present(blockname = \"$blockname\") -> false (empty)");
             return false;
         }
 
@@ -158,12 +165,12 @@ class tool_uploadblocksettings_courseblock {
                     continue;
                 }
                 if ($instance->instance->blockname == $blockname) {
-                    error_log("is_block_present(blockname = " . $blockname . ") -> true");
+                    error_log("is_block_present(blockname = \"$blockname\") -> true");
                     return true;
                 }
             }
         }
-        error_log("is_block_present(blockname = " . $blockname . ") -> false");
+        error_log("is_block_present(blockname = \"$blockname\") -> false");
         return false;
     }
 
@@ -178,11 +185,11 @@ class tool_uploadblocksettings_courseblock {
         $blocks = $this->get_installed_blocks();
         foreach ($blocks as $block) {
             if ($block->name == $blockname && ($includeinvisible || $block->visible)) {
-                error_log("is_known_block_type(blockname = " . $blockname . ") -> true");
+                error_log("is_known_block_type(blockname = \"$blockname\") -> true");
                 return true;
             }
         }
-        error_log("is_known_block_type(blockname = " . $blockname . ") -> false");
+        error_log("is_known_block_type(blockname = \"$blockname\") -> false");
         return false;
     }
 
@@ -217,6 +224,7 @@ class tool_uploadblocksettings_courseblock {
      */
     private function get_installed_blocks() {
         global $DB;
+        error_log("get_installed_blocks()");
         if (is_null($this->allblocks)) {
             $this->allblocks = $DB->get_records('block');
         }
@@ -241,10 +249,10 @@ class tool_uploadblocksettings_courseblock {
             error_log(print_r("get_undeletable_block_types() -> [empty]", true));
             return array();
         } else if (is_string($undeletableblocks)) {
-            error_log("get_undeletable_block_types() -> " . print_r(explode(',', $undeletableblocks), true));
+           error_log("get_undeletable_block_types() -> " . str_replace("\n", "", print_r(explode(',', $undeletableblocks), true)));
             return explode(',', $undeletableblocks);
         } else {
-            error_log("get_undeletable_block_types() -> " . print_r($undeletableblocks, true));
+            error_log("get_undeletable_block_types() -> " . str_replace("\n", "", print_r($undeletableblocks, true)));
             return $undeletableblocks;
         }
     }
@@ -260,6 +268,7 @@ class tool_uploadblocksettings_courseblock {
     public function load_blocks($includeinvisible = null) {
         global $DB;
 
+        error_log("load_blocks()");
         if (!is_null($this->birecordsbyregion)) {
             // Already done.
             return;
@@ -336,6 +345,7 @@ class tool_uploadblocksettings_courseblock {
             context_helper::preload_from_record($bi);
             if ($this->is_known_region($bi->region)) {
                 $this->birecordsbyregion[$bi->region][] = $bi;
+                error_log("load_blocks(): name = $bi->blockname, region = $bi->region, id = $bi->id, parent = $bi->parentcontextid, position = $bi->blockpositionid");
             } else {
                 $unknown[] = $bi;
             }
@@ -348,6 +358,7 @@ class tool_uploadblocksettings_courseblock {
             $this->birecordsbyregion[$this->defaultregion] =
                     array_merge($this->birecordsbyregion[$this->defaultregion], $unknown);
         }
+        error_log("load_blocks() -> Done");
     }
 
     /**
@@ -389,6 +400,7 @@ class tool_uploadblocksettings_courseblock {
     public function reposition_block($blockinstanceid, $newregion, $newweight) {
         global $DB;
 
+        error_log("reposition_block(blockinstanceid = $blockinstanceid, newregion = $newregion, newweight = $newweight)");
         $inst = $this->find_instance($blockinstanceid);
 
         $bi = $inst->instance;
@@ -439,6 +451,13 @@ class tool_uploadblocksettings_courseblock {
         if (!array_key_exists($region, $this->blockinstances)) {
             $this->blockinstances[$region] = $this->create_block_instances($this->birecordsbyregion[$region]);
         }
+        /*
+        $bilist = "";
+        foreach ($this->blockinstances[$region] as $bi) {
+            $bilist .= "$bi->blockname ($bi->id)\n";
+        }
+        error_log("ensure_instances_exist(region = \"$region\"): blockinstances = $bilist");
+        */
     }
 
     /**
@@ -448,10 +467,12 @@ class tool_uploadblocksettings_courseblock {
      * @return block_base
      */
     public function find_instance($instanceid) {
+        error_log("find_instance(instanceid = $instanceid)");
         foreach ($this->regions as $region => $notused) {
             $this->ensure_instances_exist($region);
             foreach($this->blockinstances[$region] as $instance) {
                 if ($instance->instance->id == $instanceid) {
+                    error_log("find_instance() -> " . str_replace("\n", "", print_r($instance, true)));
                     return $instance;
                 }
             }
@@ -463,18 +484,19 @@ class tool_uploadblocksettings_courseblock {
      *
      * @param string $blockname the name of the block.
      * @param $instance block_instances DB table row (optional).
-     * @param moodle_page $page the page this block is appearing on.
+
      * @return block_base the requested block instance.
      */
     function block_instance($blockname, $instance = NULL) {
+        error_log("block_instance(blockname = \"$blockname\")");
         if(!block_load_class($blockname)) {
+            error_log("block_load_class() -> false");
             return false;
         }
         $classname = 'block_' . $blockname;
         $retval = new $classname;
-        if($instance !== NULL) {
-            return $retval;
-        }
+
+        error_log("block_instance() -> " . str_replace("\n", "", print_r($retval, true)));
         return $retval;
     }
     
@@ -487,6 +509,7 @@ class tool_uploadblocksettings_courseblock {
     function block_load_class($blockname) {
         global $CFG;
     
+        error_log("block_load_class(blockname = \"$blockname\")");
         if(empty($blockname)) {
             return false;
         }
@@ -494,7 +517,7 @@ class tool_uploadblocksettings_courseblock {
         $classname = 'block_'.$blockname;
     
         if(class_exists($classname)) {
-            error_log("block_load_class(blockname = " . $blockname . ") -> true");
+            error_log("block_load_class() -> true");
             return true;
         }
     
@@ -505,9 +528,10 @@ class tool_uploadblocksettings_courseblock {
             include_once($blockpath);
         }else{
             //debugging("$blockname code does not exist in $blockpath", DEBUG_DEVELOPER);
+            error_log("block_load_class() -> false");
             return false;
         }
-        error_log("block_load_class(blockname = " . $blockname . ") -> " . class_exists($classname));
+        error_log("block_load_class() -> " . class_exists($classname));
         return class_exists($classname);
     }
 
@@ -562,12 +586,11 @@ class tool_uploadblocksettings_courseblock {
      * values are empty arrays.
      */
     protected function prepare_per_region_arrays() {
-        error_log("prepare_per_region_arrays()");
         $result = array();
         foreach ($this->regions as $region => $notused) {
             $result[$region] = array();
         }
-        error_log("prepare_per_region_arrays() -> " . print_r($result, true));
+        error_log("prepare_per_region_arrays() -> " . str_replace("\n", "", print_r($result, true)));
         return $result;
     }
 
@@ -581,12 +604,13 @@ class tool_uploadblocksettings_courseblock {
         error_log("create_block_instances(birecords)");
         $results = array();
         foreach ($birecords as $record) {
-            error_log("create_block_instances(): record = " . print_r($record, true));
+            error_log("create_block_instances(): record = " . str_replace("\n", "", print_r($record, true)));
             if ($blockobject = block_instance($record->blockname, $record)) {
                 $results[] = $blockobject;
             }
         }
-        error_log("prepare_per_region_arrays() -> " . print_r($result, true));
+        // error_log("create_block_instances() -> " . str_replace("\n", "", print_r($results, true)));
+        error_log("create_block_instances() -> Done");
         return $results;
     }
 }
