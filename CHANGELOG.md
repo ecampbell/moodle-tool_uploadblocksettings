@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2018-06-26
+### Added
+- Improve error-checking for additions and deletions.
+
 ## [0.4.0] - 2018-06-23
 ### Added
 - Support modify operation to move block region and position.
