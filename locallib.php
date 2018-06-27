@@ -143,8 +143,7 @@ class tool_uploadblocksettings_handler {
             $strings->blockname = $blockname;
             $strings->region = $region;
             $strings->weight = $weight;
-            error_log("Line [$line]: $op, $courseshortname, $blockname, $region, $weight");
-            
+
             if ($op == 'add') {
                 $strings->oplabel = get_string('add');
             } else if ($op == 'del' || $op == 'delete') {
@@ -180,7 +179,7 @@ class tool_uploadblocksettings_handler {
             $strings->courseid = $course->id;
 
             // Set up the course context, keeping the last context if the course is the same.
-            if($courseshortname != $previouscourse) {
+            if ($courseshortname != $previouscourse) {
                 $courseblock = new tool_uploadblocksettings_courseblock($course);
                 // Get the list of fixed blocks, i.e. Administration and Navigation.
                 $protectedblocks = $courseblock->get_undeletable_block_types();
