@@ -1,7 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [0.5.0] - 2018-06-26
+## [0.6.0] - 2018-06-27
+### Added
+- Add and delete now working well, modify disabled pending fixes.
+
+## [0.5.0] - 2018-06-25
 ### Added
 - Improve error-checking for additions and deletions.
 

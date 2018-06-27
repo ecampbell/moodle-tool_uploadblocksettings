@@ -346,6 +346,8 @@ class tool_uploadblocksettings_courseblock {
             if ($this->is_known_region($bi->region)) {
                 $this->birecordsbyregion[$bi->region][] = $bi;
                 error_log("load_blocks(): name = $bi->blockname, region = $bi->region, id = $bi->id, parent = $bi->parentcontextid, position = $bi->blockpositionid");
+                // error_log("load_blocks(): " . str_replace("\n", "", print_r($bi, true)));
+                error_log("load_blocks(): " . print_r($bi, true));
             } else {
                 $unknown[] = $bi;
             }
@@ -393,17 +395,16 @@ class tool_uploadblocksettings_courseblock {
      * If this block cannot appear on any other pages, then we change defaultposition/weight
      * in the block_instances table. Otherwise we just set the position on this page.
      *
-     * @param $blockinstanceid the block instance id.
-     * @param $newregion the new region name.
-     * @param $newweight the new weight.
+     * @param block_base $blockinstance the block instance.
+     * @param string $newregion the new region name.
+     * @param integer $newweight the new weight.
      */
-    public function reposition_block($blockinstanceid, $newregion, $newweight) {
+    public function reposition_block($blockinstance, $newregion, $newweight) {
         global $DB;
 
-        error_log("reposition_block(blockinstanceid = $blockinstanceid, newregion = $newregion, newweight = $newweight)");
-        $inst = $this->find_instance($blockinstanceid);
+        error_log("reposition_block(blockinstance->id = $blockinstance->id, newregion = $newregion, newweight = $newweight)");
 
-        $bi = $inst->instance;
+        $bi = $blockinstance;
         if ($bi->weight == $bi->defaultweight && $bi->region == $bi->defaultregion &&
                 !$bi->showinsubcontexts && strpos($bi->pagetypepattern, '*') === false) {
 
@@ -433,8 +434,8 @@ class tool_uploadblocksettings_courseblock {
 
             } else {
                 $bp->blockinstanceid = $bi->id;
-                $bp->contextid = $context->id;
-                $bp->pagetype = 'course-view-topoics';
+                $bp->contextid = $bi->parentcontextid;
+                $bp->pagetype = 'course-view-topics';
                 $bp->subpage = '';
                 $bp->visible = $bi->visible;
                 $DB->insert_record('block_positions', $bp);
@@ -570,12 +571,15 @@ class tool_uploadblocksettings_courseblock {
     public function blocks_delete_instance($instance) {
         global $DB;
 
+        error_log("blocks_delete_instance(instance = $instance->id)");
+        error_log("blocks_delete_instance(): $instance->id, $instance->blockname, $instance->region, $instance->weight");
         $DB->delete_records('block_positions', array('blockinstanceid' => $instance->id));
         $DB->delete_records('block_instances', array('id' => $instance->id));
         $DB->delete_records_list('user_preferences', 'name', array(
                     'block' . $instance->id . 'hidden', 
                     'docked_block_instance_' . $instance->id
                     ));
+        error_log("blocks_delete_instance() -> Done");
     }
 
 
@@ -612,5 +616,41 @@ class tool_uploadblocksettings_courseblock {
         // error_log("create_block_instances() -> " . str_replace("\n", "", print_r($results, true)));
         error_log("create_block_instances() -> Done");
         return $results;
+    }
+
+    /**
+     * Find a block by name, region and weight.
+     *
+     * This function is required locally so that we can identify particular blocks for deleting or modifying.
+     *
+     * @param string $blockname the block name (required).
+     * @param string $region the region name (optional).
+     * @param integer $weight the weight (optional).
+     * @return bool|block_base false if not found, or the requested block instance.
+     */
+    public function find_courseblock_instance($blockname, $region = null, $weight = null) {
+
+        error_log("find_courseblock_instance(blockname = $blockname, region = $region, weight = $weight)");
+        if ($region === null) {
+            // In a modify operation, we don't know the current region, just the new one, so look everywhere.
+            foreach ($this->get_regions() as $region) {
+                foreach ($this->birecordsbyregion[$region] as $blockinstance) {
+                    if ($blockinstance->blockname == $blockname) {
+                        error_log("find_courseblock_instance() -> $blockinstance->id ($blockinstance->blockname, $blockinstance->weight)");
+                        return $blockinstance;
+                    }
+                }
+            }
+        } else {
+            // Loop through list of blocks looking for the one with the right weight.
+            foreach ($this->birecordsbyregion[$region] as $blockinstance) {
+                if ($blockinstance->blockname == $blockname && $blockinstance->weight == $weight) {
+                    error_log("find_courseblock_instance() -> $blockinstance->id ($blockinstance->blockname, $blockinstance->weight)");
+                    return $blockinstance;
+                }
+            }
+        }
+        error_log("find_courseblock_instance() -> false");
+        return false;
     }
 }

@@ -109,7 +109,13 @@ class tool_uploadblocksettings_handler {
         // Open the file.
         $file = $this->open_file();
 
-        // Loop through each row of the file.
+        // Prepare reporting message strings.
+        $strings = new stdClass;
+        $strings->linenum = $line;
+        $strings->line = get_string('csvline', 'tool_uploadcourse');
+        $strings->skipped = get_string('skipped');
+
+            // Loop through each row of the file.
         while ($csvrow = fgetcsv($file)) {
             $line++;
 
@@ -128,18 +134,15 @@ class tool_uploadblocksettings_handler {
             $courseshortname = clean_param($csvrow[1], PARAM_TEXT);
             $blockname = clean_param($csvrow[2], PARAM_TEXT);
             $region = clean_param($csvrow[3], PARAM_TEXT);
-            $weight = (int) clean_param($csvrow[4], PARAM_INT);
+            $weight = clean_param($csvrow[4], PARAM_INT);
 
             // Prepare reporting message strings.
-            $strings = new stdClass;
             $strings->linenum = $line;
             $strings->op = $op;
             $strings->coursename = $courseshortname;
             $strings->blockname = $blockname;
             $strings->region = $region;
             $strings->weight = $weight;
-            $strings->line = get_string('csvline', 'tool_uploadcourse');
-            $strings->skipped = get_string('skipped');
             error_log("Line [$line]: $op, $courseshortname, $blockname, $region, $weight");
             
             if ($op == 'add') {
@@ -154,6 +157,11 @@ class tool_uploadblocksettings_handler {
 
             // Need to check the line is valid. If not, add a message to the report and skip the line.
 
+            // Disable modify support for the moment.
+            if ($op == 'mod') {
+                $report[] = get_string('operationnotvalid', 'tool_uploadblocksettings', $strings);
+                continue;
+            }
             // Check that the row doesn't contain any blank fields.
             if ($op == '' or $blockname == '' or $courseshortname == '' or $region == '' or $weight == '') {
                 $report[] = get_string('fieldscannotbeblank', 'tool_uploadblocksettings', $strings);
@@ -209,20 +217,20 @@ class tool_uploadblocksettings_handler {
 
             // Initial checks complete, now attempt to implement each operation.
             if ($op == 'del') {
-                // Get the block instance(s) (may be more than one, but we're not thinking about that for the moment).
-                if (($bi = $courseblock->block_instance($blockname)) !== false) {
+                // Get the block instance (only delete the first one we find that matches all criteria).
+                if (($bi = $courseblock->find_courseblock_instance($blockname, $region, $weight)) === false) {
                     $report[] = get_string('blockinstancenotfound', 'tool_uploadblocksettings', $strings);
                     continue;
                 }
                 $courseblock->blocks_delete_instance($bi);
                 $report[] = get_string('blockdeleted', 'tool_uploadblocksettings', $strings);
             } else if ($op == 'mod') {
-                // We can modify the location or the weighting of a block.
-                if (($bi = $courseblock->block_instance($blockname)) !== false) {
+                // Modify the location or the weighting of a block, the first one found by block name only.
+                if (($bi = $courseblock->find_courseblock_instance($blockname)) === false) {
                     $report[] = get_string('blockinstancenotfound', 'tool_uploadblocksettings', $strings);
                     continue;
                 }
-                $courseblock->reposition_block($bi->id , $region, $weight);
+                $courseblock->reposition_block($bi, $region, $weight);
                 $report[] = get_string('blockmoved', 'tool_uploadblocksettings', $strings);
             } else if ($op == 'add') {
                 // Check that the block can be added to the course.
