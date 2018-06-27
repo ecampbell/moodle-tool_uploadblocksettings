@@ -273,8 +273,8 @@ class tool_uploadblocksettings_courseblock {
         $contexttest = 'bi.parentcontextid IN (:contextid2, :contextid3)';
         $parentcontextparams = array();
         $pagetypepatterns = matching_page_type_patterns('course-view-*');
-        list($pagetypepatterntest, $pagetypepatternparams) =
-                $DB->get_in_or_equal($pagetypepatterns, SQL_PARAMS_NAMED, 'pagetypepatterntest');
+        list($pagetypepatterntest,
+            $pagetypepatternparams) = $DB->get_in_or_equal($pagetypepatterns, SQL_PARAMS_NAMED, 'pagetypepatterntest');
 
         $ccselect = ', ' . context_helper::get_preload_record_columns_sql('ctx');
         $ccjoin = "LEFT JOIN {context} ctx ON (ctx.instanceid = bi.id AND ctx.contextlevel = :contextlevel)";
@@ -341,8 +341,9 @@ class tool_uploadblocksettings_courseblock {
         // happen is when there are no theme block regions, but the script itself
         // has a block region in the main content area.
         if (!empty($this->defaultregion)) {
-            $this->birecordsbyregion[$this->defaultregion] = 
-                    array_merge($this->birecordsbyregion[$this->defaultregion], $unknown);
+            $this->birecordsbyregion[$this->defaultregion] = array_merge(
+                    $this->birecordsbyregion[$this->defaultregion],
+                    $unknown);
         }
     }
 
@@ -389,7 +390,7 @@ class tool_uploadblocksettings_courseblock {
         if ($bi->weight == $bi->defaultweight && $bi->region == $bi->defaultregion &&
                 !$bi->showinsubcontexts && strpos($bi->pagetypepattern, '*') === false) {
 
-            // Set default position
+            // Set default position.
             $newbi = new stdClass;
             $newbi->id = $bi->id;
             $newbi->defaultregion = $newregion;
@@ -443,7 +444,7 @@ class tool_uploadblocksettings_courseblock {
 
      * @return block_base the requested block instance.
      */
-    private function block_instance($blockname, $instance = NULL) {
+    private function block_instance($blockname, $instance = null) {
         if (!block_load_class($blockname)) {
             return false;
         }
