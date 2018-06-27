@@ -42,8 +42,7 @@ $string['csvfile_help']          = 'The format of the CSV file must be as follow
 * The allowed operations are add, del, upd.
 * The allowed regions are side-pre and side-post.
 * The allowed weights are -10 to 10 (0 is neutral)';
-$string['fieldscannotbeblank']   = '{$a->line} {$a->linenum} [{$a->oplabel}]: Fields cannot be blank: \
-block ({$a->blockname}), course ($a->coursename), region ($a->region), weight ($a->weight). {$a->skipped}.';
+$string['fieldscannotbeblank']   = '{$a->line} {$a->linenum} [{$a->oplabel}]: Fields cannot be blank: block ({$a->blockname}), course ($a->coursename), region ($a->region), weight ($a->weight). {$a->skipped}.';
 $string['heading']               = 'Upload course block settings from a CSV file';
 $string['operationnotvalid']     = '{$a->line} {$a->linenum} [{$a->oplabel}]: Operation not valid for block "{$a->blocktitle}" ({$a->blockname}). {$a->skipped}.';
 $string['operationunknown']      = '{$a->line} {$a->linenum} [{$a->oplabel}]: Unknown operation "{$a->op}".';

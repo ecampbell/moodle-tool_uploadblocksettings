@@ -1,2 +1,5 @@
 add,C101,html,side-pre,-6
 add,C101,html,side-pre,-5
+add,C101,settings,side-pre,-10
+add,C101,calendar_month,side-post,-5
+add,C101,calendar_month,side-post,-4
