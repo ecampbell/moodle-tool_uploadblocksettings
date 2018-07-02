@@ -154,13 +154,8 @@ class tool_uploadblocksettings_handler {
                 $op = 'mod';
             }
 
-            // Need to check the line is valid. If not, add a message to the report and skip the line.
+            // Check the line is valid and if not, add a message to the report and skip it.
 
-            // Disable modify support for the moment.
-            if ($op == 'mod') {
-                $report[] = get_string('operationnotvalid', 'tool_uploadblocksettings', $strings);
-                continue;
-            }
             // Check that the row doesn't contain any blank fields.
             if ($op == '' or $blockname == '' or $courseshortname == '' or $region == '' or $weight == '') {
                 $report[] = get_string('fieldscannotbeblank', 'tool_uploadblocksettings', $strings);

@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 2018-07-02
+### Added
+- Modify operation now working for Administration and Navigation blocks.
+
 ## [0.6.0] - 2018-06-27
 ### Added
 - Add and delete now working well, modify disabled pending fixes.

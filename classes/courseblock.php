@@ -23,6 +23,7 @@
  */
 
 defined('MOODLE_INTERNAL') || die;
+define('DEBUG_BLOCKSETTINGS', E_ALL);
 
 require_once($CFG->dirroot.'/lib/blocklib.php');
 
@@ -90,6 +91,7 @@ class tool_uploadblocksettings_courseblock {
         $this->context = context_course::instance($course->id);
         // Initialise the block array with the blocks from this course.
         $this->load_blocks(false);
+        // debugging("tool_uploadblocksettings_courseblock: " . print_r($this->birecordsbyregion, true), DEBUG_BLOCKSETTINGS);
         foreach ($this->get_regions() as $region) {
             $this->ensure_instances_exist($region);
         }
@@ -113,7 +115,9 @@ class tool_uploadblocksettings_courseblock {
      */
     public function get_addable_blocks() {
 
+        // debugging("get_addable_blocks()", DEBUG_BLOCKSETTINGS);
         if (!is_null($this->addableblocks)) {
+            // debugging("get_addable_blocks() -> Done", DEBUG_BLOCKSETTINGS);
             return $this->addableblocks;
         }
 
@@ -138,6 +142,7 @@ class tool_uploadblocksettings_courseblock {
             }
         }
         core_collator::asort_objects_by_property($this->addableblocks, 'title');
+        // debugging("get_addable_blocks() -> $addableblocklist", DEBUG_BLOCKSETTINGS);
         return $this->addableblocks;
     }
 
@@ -149,6 +154,7 @@ class tool_uploadblocksettings_courseblock {
      */
     public function is_block_present($blockname) {
         if (empty($this->blockinstances)) {
+            // debugging("is_block_present(blockname = \"$blockname\") -> false (empty)", DEBUG_BLOCKSETTINGS);
             return false;
         }
 
@@ -160,10 +166,12 @@ class tool_uploadblocksettings_courseblock {
                     continue;
                 }
                 if ($instance->instance->blockname == $blockname) {
+                    // debugging("is_block_present(blockname = \"$blockname\") -> true", DEBUG_BLOCKSETTINGS);
                     return true;
                 }
             }
         }
+        // debugging("is_block_present(blockname = \"$blockname\") -> false", DEBUG_BLOCKSETTINGS);
         return false;
     }
 
@@ -178,9 +186,11 @@ class tool_uploadblocksettings_courseblock {
         $blocks = $this->get_installed_blocks();
         foreach ($blocks as $block) {
             if ($block->name == $blockname && ($includeinvisible || $block->visible)) {
+                // debugging("is_known_block_type(blockname = \"$blockname\") -> true", DEBUG_BLOCKSETTINGS);
                 return true;
             }
         }
+        // debugging("is_known_block_type(blockname = \"$blockname\") -> false", DEBUG_BLOCKSETTINGS);
         return false;
     }
 
@@ -215,7 +225,7 @@ class tool_uploadblocksettings_courseblock {
      */
     private function get_installed_blocks() {
         global $DB;
-
+        // debugging("get_installed_blocks()", DEBUG_BLOCKSETTINGS);
         if (is_null($this->allblocks)) {
             $this->allblocks = $DB->get_records('block');
         }
@@ -237,10 +247,13 @@ class tool_uploadblocksettings_courseblock {
         }
 
         if (empty($undeletableblocks)) {
+            // debugging(print_r("get_undeletable_block_types() -> [empty]", true), DEBUG_BLOCKSETTINGS);
             return array();
         } else if (is_string($undeletableblocks)) {
+            // debugging("get_undeletable_block_types() -> " . str_replace("\n", "", print_r(explode(',', $undeletableblocks), true)), DEBUG_BLOCKSETTINGS);
             return explode(',', $undeletableblocks);
         } else {
+            // debugging("get_undeletable_block_types() -> " . str_replace("\n", "", print_r($undeletableblocks, true)), DEBUG_BLOCKSETTINGS);
             return $undeletableblocks;
         }
     }
@@ -256,6 +269,7 @@ class tool_uploadblocksettings_courseblock {
     public function load_blocks($includeinvisible = null) {
         global $DB;
 
+        // debugging("load_blocks()", DEBUG_BLOCKSETTINGS);
         if (!is_null($this->birecordsbyregion)) {
             // Already done.
             return;
@@ -288,6 +302,7 @@ class tool_uploadblocksettings_courseblock {
             'contextid2' => $this->context->id,
             'contextid3' => $systemcontext->id,
             'pagetype' => 'course-view-*',
+            'pagetype2' => '*', // Make the SQL work by catching Administration and Navigation blocks too.
         );
         if ('subpage' === '') {
             $params['subpage1'] = '';
@@ -312,7 +327,7 @@ class tool_uploadblocksettings_courseblock {
                 JOIN {block} b ON bi.blockname = b.name
                 LEFT JOIN {block_positions} bp ON bp.blockinstanceid = bi.id
                                                   AND bp.contextid = :contextid1
-                                                  AND bp.pagetype = :pagetype
+                                                  AND (bp.pagetype = :pagetype or bp.pagetype = :pagetype2)
                                                   AND bp.subpage = :subpage1
                 $ccjoin
                 WHERE
@@ -326,12 +341,20 @@ class tool_uploadblocksettings_courseblock {
                     COALESCE(bp.weight, bi.defaultweight),
                     bi.id";
         $blockinstances = $DB->get_recordset_sql($sql, $params + $parentcontextparams + $pagetypepatternparams);
+        // debugging("load_blocks(): sql = " . str_replace("\n", "", $sql), DEBUG_BLOCKSETTINGS);
+        // debugging("load_blocks(): params = " . str_replace("\n", "", print_r($params, true)), DEBUG_BLOCKSETTINGS);
+        // debugging("load_blocks(): parentcontextparams = " . str_replace("\n", "", print_r($parentcontextparams, true)), DEBUG_BLOCKSETTINGS);
+        // debugging("load_blocks(): pagetypepatternparams = " . str_replace("\n", "", print_r($pagetypepatternparams, true)), DEBUG_BLOCKSETTINGS);
         $this->birecordsbyregion = $this->prepare_per_region_arrays();
         $unknown = array();
         foreach ($blockinstances as $bi) {
             context_helper::preload_from_record($bi);
             if ($this->is_known_region($bi->region)) {
                 $this->birecordsbyregion[$bi->region][] = $bi;
+                // debugging("load_blocks(): name = $bi->blockname, region = $bi->region, id = $bi->id", DEBUG_BLOCKSETTINGS);
+                // debugging("load_blocks(): parent = $bi->parentcontextid, position = $bi->blockpositionid", DEBUG_BLOCKSETTINGS);
+                // debugging("load_blocks(): " . str_replace("\n", "", print_r($bi, true)), DEBUG_BLOCKSETTINGS);
+                // debugging("load_blocks(): " . print_r($bi, true), DEBUG_BLOCKSETTINGS);
             } else {
                 $unknown[] = $bi;
             }
@@ -342,9 +365,9 @@ class tool_uploadblocksettings_courseblock {
         // has a block region in the main content area.
         if (!empty($this->defaultregion)) {
             $this->birecordsbyregion[$this->defaultregion] = array_merge(
-                    $this->birecordsbyregion[$this->defaultregion],
-                    $unknown);
+                    $this->birecordsbyregion[$this->defaultregion], $unknown);
         }
+        // debugging("load_blocks() -> Done", DEBUG_BLOCKSETTINGS);
     }
 
     /**
@@ -385,6 +408,8 @@ class tool_uploadblocksettings_courseblock {
      */
     public function reposition_block($blockinstance, $newregion, $newweight) {
         global $DB;
+
+        // debugging("reposition_block(blockinstance->id = $blockinstance->id, newregion = $newregion, newweight = $newweight)", DEBUG_BLOCKSETTINGS);
 
         $bi = $blockinstance;
         if ($bi->weight == $bi->defaultweight && $bi->region == $bi->defaultregion &&
@@ -441,16 +466,18 @@ class tool_uploadblocksettings_courseblock {
      *
      * @param string $blockname the name of the block.
      * @param $instance block_instances DB table row (optional).
-
      * @return block_base the requested block instance.
      */
     private function block_instance($blockname, $instance = null) {
+        // debugging("block_instance(blockname = \"$blockname\")", DEBUG_BLOCKSETTINGS);
         if (!block_load_class($blockname)) {
+            // debugging("block_load_class() -> false", DEBUG_BLOCKSETTINGS);
             return false;
         }
         $classname = 'block_' . $blockname;
         $retval = new $classname;
 
+        // debugging("block_instance() -> " . str_replace("\n", "", print_r($retval, true)), DEBUG_BLOCKSETTINGS);
         return $retval;
     }
 
@@ -463,24 +490,28 @@ class tool_uploadblocksettings_courseblock {
     private function block_load_class($blockname) {
         global $CFG;
 
+        // debugging("block_load_class(blockname = \"$blockname\")", DEBUG_BLOCKSETTINGS);
         if (empty($blockname)) {
+            // debugging("block_load_class() -> false", DEBUG_BLOCKSETTINGS);
             return false;
         }
 
         $classname = 'block_'.$blockname;
-
         if (class_exists($classname)) {
+            // debugging("block_load_class() -> true", DEBUG_BLOCKSETTINGS);
             return true;
         }
 
         $blockpath = $CFG->dirroot.'/blocks/'.$blockname.'/block_'.$blockname.'.php';
-
         if (file_exists($blockpath)) {
             require_once($CFG->dirroot.'/blocks/moodleblock.class.php');
             include_once($blockpath);
         } else {
+            // debugging("$blockname code does not exist in $blockpath", DEBUG_DEVELOPER);
+            // debugging("block_load_class() -> false", DEBUG_BLOCKSETTINGS);
             return false;
         }
+        // debugging("block_load_class() -> " . class_exists($classname));
         return class_exists($classname);
     }
 
@@ -519,12 +550,15 @@ class tool_uploadblocksettings_courseblock {
     public function blocks_delete_instance($instance) {
         global $DB;
 
+        // debugging("blocks_delete_instance(instance = $instance->id)", DEBUG_BLOCKSETTINGS);
+        // debugging("blocks_delete_instance(): $instance->id, $instance->blockname, $instance->region, $instance->weight", DEBUG_BLOCKSETTINGS);
         $DB->delete_records('block_positions', array('blockinstanceid' => $instance->id));
         $DB->delete_records('block_instances', array('id' => $instance->id));
         $DB->delete_records_list('user_preferences', 'name', array(
                     'block' . $instance->id . 'hidden',
                     'docked_block_instance_' . $instance->id
                     ));
+        // debugging("blocks_delete_instance() -> Done", DEBUG_BLOCKSETTINGS);
     }
 
 
@@ -539,6 +573,7 @@ class tool_uploadblocksettings_courseblock {
         foreach ($this->regions as $region => $notused) {
             $result[$region] = array();
         }
+        // debugging("prepare_per_region_arrays() -> " . str_replace("\n", "", print_r($result, true)), DEBUG_BLOCKSETTINGS);
         return $result;
     }
 
@@ -549,12 +584,15 @@ class tool_uploadblocksettings_courseblock {
      * @return array An array of instantiated block_instance objects
      */
     protected function create_block_instances($birecords) {
+        // debugging("create_block_instances(birecords)", DEBUG_BLOCKSETTINGS);
         $results = array();
         foreach ($birecords as $record) {
             if ($blockobject = block_instance($record->blockname, $record)) {
+                // debugging("create_block_instances(): record = " . str_replace("\n", "", print_r($record, true)), DEBUG_BLOCKSETTINGS);
                 $results[] = $blockobject;
             }
         }
+        // debugging("create_block_instances() -> Done", DEBUG_BLOCKSETTINGS);
         return $results;
     }
 
@@ -570,11 +608,13 @@ class tool_uploadblocksettings_courseblock {
      */
     public function find_courseblock_instance($blockname, $region = null, $weight = null) {
 
+        // debugging("find_courseblock_instance(blockname = $blockname, region = $region, weight = $weight)", DEBUG_BLOCKSETTINGS);
         if ($region === null) {
             // In a modify operation, we don't know the current region, just the new one, so look everywhere.
             foreach ($this->get_regions() as $region) {
                 foreach ($this->birecordsbyregion[$region] as $blockinstance) {
                     if ($blockinstance->blockname == $blockname) {
+                        // debugging("find_courseblock_instance() -> $blockinstance->id ($blockinstance->blockname, $blockinstance->weight)", DEBUG_BLOCKSETTINGS);
                         return $blockinstance;
                     }
                 }
@@ -583,10 +623,12 @@ class tool_uploadblocksettings_courseblock {
             // Loop through list of blocks looking for the one with the right weight.
             foreach ($this->birecordsbyregion[$region] as $blockinstance) {
                 if ($blockinstance->blockname == $blockname && $blockinstance->weight == $weight) {
+                    // debugging("find_courseblock_instance() -> $blockinstance->id ($blockinstance->blockname, $blockinstance->weight)", DEBUG_BLOCKSETTINGS);
                     return $blockinstance;
                 }
             }
         }
+        // debugging("find_courseblock_instance() -> false", DEBUG_BLOCKSETTINGS);
         return false;
     }
 }
