@@ -250,7 +250,7 @@ class tool_uploadblocksettings_courseblock {
             // debugging(print_r("get_undeletable_block_types() -> [empty]", true), DEBUG_BLOCKSETTINGS);
             return array();
         } else if (is_string($undeletableblocks)) {
-           // debugging("get_undeletable_block_types() -> " . str_replace("\n", "", print_r(explode(',', $undeletableblocks), true)), DEBUG_BLOCKSETTINGS);
+            // debugging("get_undeletable_block_types() -> " . str_replace("\n", "", print_r(explode(',', $undeletableblocks), true)), DEBUG_BLOCKSETTINGS);
             return explode(',', $undeletableblocks);
         } else {
             // debugging("get_undeletable_block_types() -> " . str_replace("\n", "", print_r($undeletableblocks, true)), DEBUG_BLOCKSETTINGS);
@@ -287,8 +287,8 @@ class tool_uploadblocksettings_courseblock {
         $contexttest = 'bi.parentcontextid IN (:contextid2, :contextid3)';
         $parentcontextparams = array();
         $pagetypepatterns = matching_page_type_patterns('course-view-*');
-        list($pagetypepatterntest, $pagetypepatternparams) =
-                $DB->get_in_or_equal($pagetypepatterns, SQL_PARAMS_NAMED, 'pagetypepatterntest');
+        list($pagetypepatterntest,
+            $pagetypepatternparams) = $DB->get_in_or_equal($pagetypepatterns, SQL_PARAMS_NAMED, 'pagetypepatterntest');
 
         $ccselect = ', ' . context_helper::get_preload_record_columns_sql('ctx');
         $ccjoin = "LEFT JOIN {context} ctx ON (ctx.instanceid = bi.id AND ctx.contextlevel = :contextlevel)";
@@ -342,14 +342,17 @@ class tool_uploadblocksettings_courseblock {
                     bi.id";
         $blockinstances = $DB->get_recordset_sql($sql, $params + $parentcontextparams + $pagetypepatternparams);
         // debugging("load_blocks(): sql = " . str_replace("\n", "", $sql), DEBUG_BLOCKSETTINGS);
-        // debugging("load_blocks(): params = " . str_replace("\n", "", print_r($params, true)) . "; parentcontextparams = " . str_replace("\n", "", print_r($parentcontextparams, true)) . "; pagetypepatternparams = " . str_replace("\n", "", print_r($pagetypepatternparams, true)), DEBUG_BLOCKSETTINGS);
+        // debugging("load_blocks(): params = " . str_replace("\n", "", print_r($params, true)), DEBUG_BLOCKSETTINGS);
+        // debugging("load_blocks(): parentcontextparams = " . str_replace("\n", "", print_r($parentcontextparams, true)), DEBUG_BLOCKSETTINGS);
+        // debugging("load_blocks(): pagetypepatternparams = " . str_replace("\n", "", print_r($pagetypepatternparams, true)), DEBUG_BLOCKSETTINGS);
         $this->birecordsbyregion = $this->prepare_per_region_arrays();
         $unknown = array();
         foreach ($blockinstances as $bi) {
             context_helper::preload_from_record($bi);
             if ($this->is_known_region($bi->region)) {
                 $this->birecordsbyregion[$bi->region][] = $bi;
-                // debugging("load_blocks(): name = $bi->blockname, region = $bi->region, id = $bi->id, parent = $bi->parentcontextid, position = $bi->blockpositionid", DEBUG_BLOCKSETTINGS);
+                // debugging("load_blocks(): name = $bi->blockname, region = $bi->region, id = $bi->id", DEBUG_BLOCKSETTINGS);
+                // debugging("load_blocks(): parent = $bi->parentcontextid, position = $bi->blockpositionid", DEBUG_BLOCKSETTINGS);
                 // debugging("load_blocks(): " . str_replace("\n", "", print_r($bi, true)), DEBUG_BLOCKSETTINGS);
                 // debugging("load_blocks(): " . print_r($bi, true), DEBUG_BLOCKSETTINGS);
             } else {
@@ -361,8 +364,8 @@ class tool_uploadblocksettings_courseblock {
         // happen is when there are no theme block regions, but the script itself
         // has a block region in the main content area.
         if (!empty($this->defaultregion)) {
-            $this->birecordsbyregion[$this->defaultregion] =
-                    array_merge($this->birecordsbyregion[$this->defaultregion], $unknown);
+            $this->birecordsbyregion[$this->defaultregion] = array_merge(
+                    $this->birecordsbyregion[$this->defaultregion], $unknown);
         }
         // debugging("load_blocks() -> Done", DEBUG_BLOCKSETTINGS);
     }
@@ -504,7 +507,7 @@ class tool_uploadblocksettings_courseblock {
             require_once($CFG->dirroot.'/blocks/moodleblock.class.php');
             include_once($blockpath);
         } else {
-            //// debugging("$blockname code does not exist in $blockpath", DEBUG_DEVELOPER);
+            // debugging("$blockname code does not exist in $blockpath", DEBUG_DEVELOPER);
             // debugging("block_load_class() -> false", DEBUG_BLOCKSETTINGS);
             return false;
         }
@@ -519,7 +522,7 @@ class tool_uploadblocksettings_courseblock {
      * @param string $pagetype for example 'course-view-weeks' or 'mod-quiz-view'.
      * @return array an array of all the page type patterns that might match this page type.
      */
-    function matching_page_type_patterns($pagetype) {
+    private function matching_page_type_patterns($pagetype) {
         $patterns = array($pagetype);
         $bits = explode('-', $pagetype);
         if (count($bits) == 3 && $bits[0] == 'mod') {
