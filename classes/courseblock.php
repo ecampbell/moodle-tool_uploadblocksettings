@@ -342,8 +342,7 @@ class tool_uploadblocksettings_courseblock {
                     bi.id";
         $blockinstances = $DB->get_recordset_sql($sql, $params + $parentcontextparams + $pagetypepatternparams);
         // debugging("load_blocks(): sql = " . str_replace("\n", "", $sql), DEBUG_BLOCKSETTINGS);
-        // debugging("load_blocks(): params = " . str_replace("\n", "", print_r($params, true)) . "; parentcontextparams = " . str_replace("\n", "", print_r($parentcontextparams, true)) . "; pagetypepatternparams = " . str_replace("\n", "", print_r($pagetypepatternparams, true)),
-            DEBUG_BLOCKSETTINGS);
+        // debugging("load_blocks(): params = " . str_replace("\n", "", print_r($params, true)) . "; parentcontextparams = " . str_replace("\n", "", print_r($parentcontextparams, true)) . "; pagetypepatternparams = " . str_replace("\n", "", print_r($pagetypepatternparams, true)), DEBUG_BLOCKSETTINGS);
         $this->birecordsbyregion = $this->prepare_per_region_arrays();
         $unknown = array();
         foreach ($blockinstances as $bi) {
