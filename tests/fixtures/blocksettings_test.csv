@@ -1,6 +1,6 @@
 add,C101,calendar_month,side-post,-5
-add,C101,participants,side-post,-6
+add,C101,participants,unknownregion,-6
 add,C101,uninstalledblock,side-post,-5
 add,C101,settings,side-pre,-5
 del,C101,settings,side-pre,-5
-del,C101,participants,unknownregion,-5
+del,C101,participants,side-post,-5

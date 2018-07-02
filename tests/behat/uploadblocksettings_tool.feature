@@ -7,8 +7,8 @@ Feature: Setting course blocks by uploading a CSV file.
     Background:
         Given the following "courses" exist:
             | fullname | shortname  | category | idnumber |
-            | Course 1 | C101       | 1        | idnum1   |
-            | Course 2 | C102       | 1        | idnum2   |
+            | Course 1 | C101       | 0        | idnum1   |
+            | Course 2 | C102       | 0        | idnum2   |
         Given the following "users" exist:
             | username    | firstname | lastname | email                |
             | student1    | Sam       | Student  | student1@example.com |
