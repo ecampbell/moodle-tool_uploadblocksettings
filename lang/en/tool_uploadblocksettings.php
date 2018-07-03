@@ -38,7 +38,7 @@ $string['csvcomment']            = '{$a->line} {$a->linenum} []: Comment. {$a->s
 $string['csvfile']               = '';
 $string['csvfile_help']          = 'The format of the CSV file must be as follows:
 
-* Lines beginning with a '#' or ';' character are comments, and skipped.
+* Lines beginning with a # or ; character are comments, and skipped.
 * Each line of the file contains one record.
 * Each record is a series of data in a fixed order separated by commas.
 * The required fields are operation, course shortname, block, region, weight.
