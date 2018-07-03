@@ -48,7 +48,7 @@ Each record is a series of data in a fixed order separated by commas.
 The required fields are operation, course shortname, block, region, weight.  
 The allowed operations are add, del(ete), res(et), upd(ate).  
 The allowed regions are side-pre and side-post.  
-The allowed weights are -10 to 10 (0 is neutral)';
+The allowed weights are -10 to 10 (0 is neutral).
 
 ## License ##
 
