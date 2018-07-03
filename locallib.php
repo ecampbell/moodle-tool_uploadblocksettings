@@ -119,13 +119,19 @@ class tool_uploadblocksettings_handler {
         while ($csvrow = fgetcsv($file)) {
             $line++;
 
+            // Skip any comment lines starting with # or ;.
+            if ($csvrow[0][0] == '#' or $csvrow[0][0] == ';') {
+                $report[] = get_string('csvcomment', 'tool_uploadblocksettings', $strings);
+                continue;
+            }
+
             // Check for the correct number of columns.
             if (count($csvrow) < 5) {
-                $report[] = get_string('toofewcols', 'tool_uploadblocksettings', $line);
+                $report[] = get_string('toofewcols', 'tool_uploadblocksettings', $strings);
                 continue;
             }
             if (count($csvrow) > 5) {
-                $report[] = get_string('toomanycols', 'tool_uploadblocksettings', $line);
+                $report[] = get_string('toomanycols', 'tool_uploadblocksettings', $strings);
                 continue;
             }
 
@@ -152,6 +158,9 @@ class tool_uploadblocksettings_handler {
             } else if ($op == 'upd' || $op == 'update' || $op == 'mod' || $op == 'modify') {
                 $strings->oplabel = get_string('update');
                 $op = 'mod';
+            } else if ($op == 'res' || $op == 'reset') {
+                $strings->oplabel = get_string('reset');
+                $op = 'res';
             }
 
             // Check the line is valid and if not, add a message to the report and skip it.
@@ -162,7 +171,7 @@ class tool_uploadblocksettings_handler {
                 continue;
             }
             // Check that the operation is valid.
-            if (!in_array($op, array('add', 'del', 'mod'))) {
+            if (!in_array($op, array('add', 'del', 'mod', 'res'))) {
                 $report[] = get_string('operationunknown', 'tool_uploadblocksettings', $strings);
                 continue;
             }
@@ -179,6 +188,18 @@ class tool_uploadblocksettings_handler {
                 // Get the list of fixed blocks, i.e. Administration and Navigation.
                 $protectedblocks = $courseblock->get_undeletable_block_types();
                 $previouscourse = $courseshortname;
+            }
+
+            // Handle special case of course block reset, which doesn't require valid blocks to be specified.
+            if ($op == 'res') {
+                global $CFG;
+                require_once($CFG->libdir.'/blocklib.php');
+                $context = context_course::instance($course->id);
+                blocks_delete_all_for_context($context->id);
+                blocks_add_default_course_blocks($course);
+
+                $report[] = get_string('courseblocksreset', 'tool_uploadblocksettings', $strings);
+                continue;
             }
 
             // Check that a valid block is specified, and get its name if it is.

@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2018-07-03
+### Added
+- Support comment lines and the course block reset operation.
+
 ## [0.7.0] - 2018-07-02
 ### Added
 - Modify operation now working for Administration and Navigation blocks.
