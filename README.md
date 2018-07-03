@@ -42,12 +42,12 @@ to upload a CSV file containing lines of the form:
 
     operation, course shortname, block name, region, weight
 
-Lines beginning with a '#' or ';' character are comments, and skipped.
-Each line of the file contains one record.
-Each record is a series of data in a fixed order separated by commas.
-The required fields are operation, course shortname, block, region, weight.
-The allowed operations are add, del(ete), res(et), upd(ate).
-The allowed regions are side-pre and side-post.
+Lines beginning with a '#' or ';' character are comments, and skipped.  
+Each line of the file contains one record.  
+Each record is a series of data in a fixed order separated by commas.  
+The required fields are operation, course shortname, block, region, weight.  
+The allowed operations are add, del(ete), res(et), upd(ate).  
+The allowed regions are side-pre and side-post.  
 The allowed weights are -10 to 10 (0 is neutral)';
 
 ## License ##
