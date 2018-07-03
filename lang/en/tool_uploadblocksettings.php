@@ -28,18 +28,21 @@ $string['blockadded']            = '{$a->line} {$a->linenum} [{$a->oplabel}]: Bl
 $string['blockadderror']         = '{$a->line} {$a->linenum} [{$a->oplabel}]: Error: block "{$a->blocktitle}" ({$a->blockname}) not added to course "{$a->coursename}" ({$a->courseid}). {$a->skipped}.';
 $string['blockalreadyadded']     = '{$a->line} {$a->linenum} [{$a->oplabel}]: Block "{$a->blocktitle}" ({$a->blockname}) already added to course "{$a->coursename}" ({$a->courseid}). {$a->skipped}.';
 $string['blockdeleted']          = '{$a->line} {$a->linenum} [{$a->oplabel}]: Block "{$a->blocktitle}" ({$a->blockname}) deleted from course "{$a->coursename}" ({$a->courseid}).';
-$string['blockinstancenotfound']          = '{$a->line} {$a->linenum} [{$a->oplabel}]: Warning: Block "{$a->blocktitle}" ({$a->blockname}) not found in course "{$a->coursename}" ({$a->courseid}).';
+$string['blockinstancenotfound'] = '{$a->line} {$a->linenum} [{$a->oplabel}]: Warning: Block "{$a->blocktitle}" ({$a->blockname}) not found in course "{$a->coursename}" ({$a->courseid}).';
 $string['blockdoesntexist']      = '{$a->line} {$a->linenum} [{$a->oplabel}]: Block "{$a->blocktitle}" ({$a->blockname}) not added to course "{$a->coursename}" ({$a->courseid}). {$a->skipped}.';
 $string['blockmoved']            = '{$a->line} {$a->linenum} [{$a->oplabel}]: Block "{$a->blocktitle}" ({$a->blockname}) in course "{$a->coursename}" ({$a->courseid}) moved.';
 $string['blocknotinstalled']     = '{$a->line} {$a->linenum} [{$a->oplabel}]: Block ({$a->blockname}) not installed. {$a->skipped}.';
-$string['coursenotfound']        = '{$a->line} {$a->linenum} [{$a->oplabel}]: Course "{$a->courseshortname}" not found. {$a->skipped}.';
-$string['csvfile'] = '';
+$string['coursenotfound']        = '{$a->line} {$a->linenum} [{$a->oplabel}]: Course "{$a->coursename}" not found. {$a->skipped}.';
+$string['courseblocksreset']     = '{$a->line} {$a->linenum} [{$a->oplabel}]: Course "{$a->coursename}" blocks reset.';
+$string['csvcomment']            = '{$a->line} {$a->linenum} []: Comment. {$a->skipped}.';
+$string['csvfile']               = '';
 $string['csvfile_help']          = 'The format of the CSV file must be as follows:
 
+* Lines beginning with a '#' or ';' character are comments, and skipped.
 * Each line of the file contains one record.
 * Each record is a series of data in a fixed order separated by commas.
 * The required fields are operation, course shortname, block, region, weight.
-* The allowed operations are add, del, upd.
+* The allowed operations are add, del(ete), res(et), upd(ate).
 * The allowed regions are side-pre and side-post.
 * The allowed weights are -10 to 10 (0 is neutral)';
 $string['fieldscannotbeblank']   = '{$a->line} {$a->linenum} [{$a->oplabel}]: Fields cannot be blank: block ({$a->blockname}), course ($a->coursename), region ($a->region), weight ($a->weight). {$a->skipped}.';
