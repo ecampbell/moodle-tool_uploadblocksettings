@@ -1,0 +1,3 @@
+# Add duplicate blocks, which should return errors
+add,C101,calendar_month,side-post,-4
+add,C101,calendar_month,side-post,-3
