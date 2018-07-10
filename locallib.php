@@ -24,6 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+require_once($CFG->libdir.'/blocklib.php');
+
 /**
  * Validates and processes files for uploading a block settings CSV file
  *
@@ -88,15 +90,16 @@ class tool_uploadblocksettings_handler {
      *
      * Opens the file, loops through each row. Cleans the values in each column,
      * checks that the operation is valid and the blocks exist. If all is well,
-     * adds, modifies or removes the block in column 3 to/from the course in column 2
-     * context as specified.
+     * adds or removes the block in column 3 to/from the course in column 2
+     * context as specified. Also resets the course blocks to the default, in which
+     * case, no block needs to be specified.
      * Returns a report of successes and failures.
      *
      * @see open_file()
      * @return string A report of successes and failures.S
      */
     public function process() {
-        global $DB;
+        global $DB, $CFG;
         $report = array();
 
         // Set a counter so we can report line numbers for errors.
@@ -118,6 +121,7 @@ class tool_uploadblocksettings_handler {
             // Loop through each row of the file.
         while ($csvrow = fgetcsv($file)) {
             $line++;
+            $strings->linenum = $line;
 
             // Skip any comment lines starting with # or ;.
             if ($csvrow[0][0] == '#' or $csvrow[0][0] == ';') {
@@ -143,7 +147,6 @@ class tool_uploadblocksettings_handler {
             $weight = clean_param($csvrow[4], PARAM_INT);
 
             // Prepare reporting message strings.
-            $strings->linenum = $line;
             $strings->op = $op;
             $strings->coursename = $courseshortname;
             $strings->blockname = $blockname;
@@ -155,9 +158,6 @@ class tool_uploadblocksettings_handler {
             } else if ($op == 'del' || $op == 'delete') {
                 $strings->oplabel = get_string('delete');
                 $op = 'del';
-            } else if ($op == 'upd' || $op == 'update' || $op == 'mod' || $op == 'modify') {
-                $strings->oplabel = get_string('update');
-                $op = 'mod';
             } else if ($op == 'res' || $op == 'reset') {
                 $strings->oplabel = get_string('reset');
                 $op = 'res';
@@ -165,13 +165,13 @@ class tool_uploadblocksettings_handler {
 
             // Check the line is valid and if not, add a message to the report and skip it.
 
-            // Check that the row doesn't contain any blank fields.
-            if ($op == '' or $blockname == '' or $courseshortname == '' or $region == '' or $weight == '') {
+            // Check that the row specifies an operation and a course.
+            if ($op == '' or $courseshortname == '') {
                 $report[] = get_string('fieldscannotbeblank', 'tool_uploadblocksettings', $strings);
                 continue;
             }
             // Check that the operation is valid.
-            if (!in_array($op, array('add', 'del', 'mod', 'res'))) {
+            if (!in_array($op, array('add', 'del', 'res'))) {
                 $report[] = get_string('operationunknown', 'tool_uploadblocksettings', $strings);
                 continue;
             }
@@ -190,10 +190,8 @@ class tool_uploadblocksettings_handler {
                 $previouscourse = $courseshortname;
             }
 
-            // Handle special case of course block reset, which doesn't require valid blocks to be specified.
+            // Handle special case of course block reset, which doesn't require a block to be specified.
             if ($op == 'res') {
-                global $CFG;
-                require_once($CFG->libdir.'/blocklib.php');
                 $context = context_course::instance($course->id);
                 blocks_delete_all_for_context($context->id);
                 blocks_add_default_course_blocks($course);
@@ -202,19 +200,24 @@ class tool_uploadblocksettings_handler {
                 continue;
             }
 
+            // Check that the row specifies a block, region and weight.
+            if ($blockname == '' or $region == '' or $weight == '') {
+                $report[] = get_string('fieldscannotbeblank', 'tool_uploadblocksettings', $strings);
+                continue;
+            }
             // Check that a valid block is specified, and get its name if it is.
             if (!($courseblock->is_known_block_type($blockname))) {
                 $report[] = get_string('blocknotinstalled', 'tool_uploadblocksettings', $strings);
                 continue;
             }
             $strings->blocktitle = get_string('pluginname', 'block_' . $blockname);
-            // Check that the block is not undeletable, if it's being added or deleted.
-            if (($op == 'add' || $op == 'del') && in_array($blockname, $protectedblocks)) {
+            // Check that the block is not a special case like Administration or Navigation.
+            if (in_array($blockname, $protectedblocks)) {
                 $report[] = get_string('operationnotvalid', 'tool_uploadblocksettings', $strings);
                 continue;
             }
-            // Check that the block is added, if it is being deleted or modified.
-            if (($op == 'del' or $op == 'mod') && !$courseblock->is_block_present($blockname)) {
+            // Check that the block is present, if it is being deleted.
+            if (($op == 'del') && !$courseblock->is_block_present($blockname)) {
                 $report[] = get_string('blockdoesntexist', 'tool_uploadblocksettings', $strings);
                 continue;
             }
@@ -237,16 +240,9 @@ class tool_uploadblocksettings_handler {
                     $report[] = get_string('blockinstancenotfound', 'tool_uploadblocksettings', $strings);
                     continue;
                 }
-                $courseblock->blocks_delete_instance($bi);
+                blocksettings_delete_instance($bi);
+                // blocks_delete_instance($bi);
                 $report[] = get_string('blockdeleted', 'tool_uploadblocksettings', $strings);
-            } else if ($op == 'mod') {
-                // Modify the location or the weighting of a block, the first one found by block name only.
-                if (($bi = $courseblock->find_courseblock_instance($blockname)) === false) {
-                    $report[] = get_string('blockinstancenotfound', 'tool_uploadblocksettings', $strings);
-                    continue;
-                }
-                $courseblock->reposition_block($bi, $region, $weight);
-                $report[] = get_string('blockmoved', 'tool_uploadblocksettings', $strings);
             } else if ($op == 'add') {
                 // Check that the block can be added to the course.
                 if (array_key_exists($blockname, $courseblock->get_addable_blocks())) {

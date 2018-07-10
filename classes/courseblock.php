@@ -25,8 +25,6 @@
 defined('MOODLE_INTERNAL') || die;
 define('DEBUG_BLOCKSETTINGS', E_ALL);
 
-require_once($CFG->dirroot.'/lib/blocklib.php');
-
 /**
  * Utilities for checking course blocks
  *
@@ -52,10 +50,11 @@ class tool_uploadblocksettings_courseblock {
     private $context;
 
     /** @var array region name => 1.*/
+    // protected $regions = array();
     protected $regions = array(BLOCK_POS_LEFT => "1", BLOCK_POS_RIGHT => "1");
 
     /** @var string the region where new blocks are added.*/
-    protected $defaultregion = BLOCK_POS_RIGHT;
+    protected $defaultregion;
 
     /** @var array will be $DB->get_records('blocks') */
     protected $allblocks = null;
@@ -87,14 +86,19 @@ class tool_uploadblocksettings_courseblock {
      */
     public function __construct($course) {
         $this->course = $course;
-        // Get the course context so that we can identify its block instances.
-        $this->context = context_course::instance($course->id);
-        // Initialise the block array with the blocks from this course.
-        $this->load_blocks(false);
-        // debugging("tool_uploadblocksettings_courseblock: " . print_r($this->birecordsbyregion, true), DEBUG_BLOCKSETTINGS);
+
+        // Define regions.
         foreach ($this->get_regions() as $region) {
             $this->ensure_instances_exist($region);
         }
+        $this->defaultregion = BLOCK_POS_RIGHT;
+
+        // Get the course context so that we can identify its block instances.
+        $this->context = context_course::instance($course->id);
+        // Initialise the block array (birecordsbyregion) with the blocks from this course.
+        $this->load_blocks(false);
+        // debugging("tool_uploadblocksettings_courseblock: " . print_r($this->birecordsbyregion, true), DEBUG_BLOCKSETTINGS);
+
     }
 
     /**
@@ -242,18 +246,16 @@ class tool_uploadblocksettings_courseblock {
         $undeletableblocks = false;
         if (isset($CFG->undeletableblocktypes)) {
             $undeletableblocks = $CFG->undeletableblocktypes;
-        } else {
-            $undeletableblocks = 'settings,navigation';
         }
 
         if (empty($undeletableblocks)) {
-            // debugging(print_r("get_undeletable_block_types() -> [empty]", true), DEBUG_BLOCKSETTINGS);
+            debugging(print_r("get_undeletable_block_types() -> [empty]", true), DEBUG_BLOCKSETTINGS);
             return array();
         } else if (is_string($undeletableblocks)) {
-            // debugging("get_undeletable_block_types() -> " . str_replace("\n", "", print_r(explode(',', $undeletableblocks), true)), DEBUG_BLOCKSETTINGS);
+            debugging("get_undeletable_block_types() -> " . str_replace("\n", "", print_r(explode(',', $undeletableblocks), true)), DEBUG_BLOCKSETTINGS);
             return explode(',', $undeletableblocks);
         } else {
-            // debugging("get_undeletable_block_types() -> " . str_replace("\n", "", print_r($undeletableblocks, true)), DEBUG_BLOCKSETTINGS);
+            debugging("get_undeletable_block_types() -> " . str_replace("\n", "", print_r($undeletableblocks, true)), DEBUG_BLOCKSETTINGS);
             return $undeletableblocks;
         }
     }
@@ -351,8 +353,8 @@ class tool_uploadblocksettings_courseblock {
             context_helper::preload_from_record($bi);
             if ($this->is_known_region($bi->region)) {
                 $this->birecordsbyregion[$bi->region][] = $bi;
-                // debugging("load_blocks(): name = $bi->blockname, region = $bi->region, id = $bi->id", DEBUG_BLOCKSETTINGS);
-                // debugging("load_blocks(): parent = $bi->parentcontextid, position = $bi->blockpositionid", DEBUG_BLOCKSETTINGS);
+                debugging("load_blocks(): name = $bi->blockname, region = $bi->region, id = $bi->id", DEBUG_BLOCKSETTINGS);
+                debugging("load_blocks(): parent = $bi->parentcontextid, position = $bi->blockpositionid", DEBUG_BLOCKSETTINGS);
                 // debugging("load_blocks(): " . str_replace("\n", "", print_r($bi, true)), DEBUG_BLOCKSETTINGS);
                 // debugging("load_blocks(): " . print_r($bi, true), DEBUG_BLOCKSETTINGS);
             } else {
@@ -411,9 +413,13 @@ class tool_uploadblocksettings_courseblock {
     public function reposition_block($blockinstance, $newregion, $newweight) {
         global $DB;
 
-        // debugging("reposition_block(blockinstance->id = $blockinstance->id, newregion = $newregion, newweight = $newweight)", DEBUG_BLOCKSETTINGS);
+        debugging("reposition_block(blockinstance->id = $blockinstance->id, newregion = $newregion, newweight = $newweight)", DEBUG_BLOCKSETTINGS);
+        debugging("reposition_block(): blockinstance->blockpositionid = $blockinstance->blockpositionid", DEBUG_BLOCKSETTINGS);
 
-        $bi = $blockinstance;
+        $inst = $this->find_instance($blockinstance->id);
+
+        $bi = $inst->instance;
+        debugging("reposition_block(): bi->id = $bi->id; bi->blockpositionid = $bi->blockpositionid", DEBUG_BLOCKSETTINGS);
         if ($bi->weight == $bi->defaultweight && $bi->region == $bi->defaultregion &&
                 !$bi->showinsubcontexts && strpos($bi->pagetypepattern, '*') === false) {
 
@@ -422,6 +428,7 @@ class tool_uploadblocksettings_courseblock {
             $newbi->id = $bi->id;
             $newbi->defaultregion = $newregion;
             $newbi->defaultweight = $newweight;
+            $newbi->timemodified = time();
             $DB->update_record('block_instances', $newbi);
 
             if ($bi->blockpositionid) {
@@ -453,116 +460,22 @@ class tool_uploadblocksettings_courseblock {
     }
 
     /**
-     * Ensure block instances exist for a given region
+     * Find a given block by its instance id
      *
-     * @param string $region Check for bi's with the instance with this name
+     * @param integer $instanceid
+     * @return block_base
      */
-    protected function ensure_instances_exist($region) {
-        if (!array_key_exists($region, $this->blockinstances)) {
-            $this->blockinstances[$region] = $this->create_block_instances($this->birecordsbyregion[$region]);
-        }
-    }
-
-    /**
-     * Creates a new instance of the specified block class.
-     *
-     * @param string $blockname the name of the block.
-     * @param $instance block_instances DB table row (optional).
-     * @return block_base the requested block instance.
-     */
-    private function block_instance($blockname, $instance = null) {
-        // debugging("block_instance(blockname = \"$blockname\")", DEBUG_BLOCKSETTINGS);
-        if (!block_load_class($blockname)) {
-            // debugging("block_load_class() -> false", DEBUG_BLOCKSETTINGS);
-            return false;
-        }
-        $classname = 'block_' . $blockname;
-        $retval = new $classname;
-
-        // debugging("block_instance() -> " . str_replace("\n", "", print_r($retval, true)), DEBUG_BLOCKSETTINGS);
-        return $retval;
-    }
-
-    /**
-     * Load the block class for a particular type of block.
-     *
-     * @param string $blockname the name of the block.
-     * @return boolean success or failure.
-     */
-    private function block_load_class($blockname) {
-        global $CFG;
-
-        // debugging("block_load_class(blockname = \"$blockname\")", DEBUG_BLOCKSETTINGS);
-        if (empty($blockname)) {
-            // debugging("block_load_class() -> false", DEBUG_BLOCKSETTINGS);
-            return false;
-        }
-
-        $classname = 'block_'.$blockname;
-        if (class_exists($classname)) {
-            // debugging("block_load_class() -> true", DEBUG_BLOCKSETTINGS);
-            return true;
-        }
-
-        $blockpath = $CFG->dirroot.'/blocks/'.$blockname.'/block_'.$blockname.'.php';
-        if (file_exists($blockpath)) {
-            require_once($CFG->dirroot.'/blocks/moodleblock.class.php');
-            include_once($blockpath);
-        } else {
-            // debugging("$blockname code does not exist in $blockpath", DEBUG_DEVELOPER);
-            // debugging("block_load_class() -> false", DEBUG_BLOCKSETTINGS);
-            return false;
-        }
-        // debugging("block_load_class() -> " . class_exists($classname));
-        return class_exists($classname);
-    }
-
-    /**
-     * Given a specific page type, return all the page type patterns that might
-     * match it.
-     *
-     * @param string $pagetype for example 'course-view-weeks' or 'mod-quiz-view'.
-     * @return array an array of all the page type patterns that might match this page type.
-     */
-    private function matching_page_type_patterns($pagetype) {
-        $patterns = array($pagetype);
-        $bits = explode('-', $pagetype);
-        if (count($bits) == 3 && $bits[0] == 'mod') {
-            if ($bits[2] == 'view') {
-                $patterns[] = 'mod-*-view';
-            } else if ($bits[2] == 'index') {
-                $patterns[] = 'mod-*-index';
+    public function find_instance($instanceid) {
+        foreach ($this->regions as $region => $notused) {
+            $this->ensure_instances_exist($region);
+            foreach($this->blockinstances[$region] as $instance) {
+                if ($instance->instance->id == $instanceid) {
+                    return $instance;
+                }
             }
         }
-        while (count($bits) > 0) {
-            $patterns[] = implode('-', $bits) . '-*';
-            array_pop($bits);
-        }
-        $patterns[] = '*';
-        return $patterns;
+        throw new block_not_on_page_exception($instanceid, $this->page);
     }
-
-    /**
-     * Delete a block, and associated data.
-     *
-     * @param object $instance a row from the block_instances table
-     * @param bool $nolongerused legacy parameter. Not used, but kept for backwards compatibility.
-     * @param bool $skipblockstables for internal use only. Makes @see blocks_delete_all_for_context() more efficient.
-     */
-    public function blocks_delete_instance($instance) {
-        global $DB;
-
-        // debugging("blocks_delete_instance(instance = $instance->id)", DEBUG_BLOCKSETTINGS);
-        // debugging("blocks_delete_instance(): $instance->id, $instance->blockname, $instance->region, $instance->weight", DEBUG_BLOCKSETTINGS);
-        $DB->delete_records('block_positions', array('blockinstanceid' => $instance->id));
-        $DB->delete_records('block_instances', array('id' => $instance->id));
-        $DB->delete_records_list('user_preferences', 'name', array(
-                    'block' . $instance->id . 'hidden',
-                    'docked_block_instance_' . $instance->id
-                    ));
-        // debugging("blocks_delete_instance() -> Done", DEBUG_BLOCKSETTINGS);
-    }
-
 
     /**
      * Returns an array of region names as keys and nested arrays for values
@@ -599,6 +512,17 @@ class tool_uploadblocksettings_courseblock {
     }
 
     /**
+     * Ensure block instances exist for a given region
+     *
+     * @param string $region Check for bi's with the instance with this name
+     */
+    protected function ensure_instances_exist($region) {
+        if (!array_key_exists($region, $this->blockinstances)) {
+            $this->blockinstances[$region] = $this->create_block_instances($this->birecordsbyregion[$region]);
+        }
+    }
+
+    /**
      * Find a block by name, region and weight.
      *
      * This function is required locally so that we can identify particular blocks for deleting or modifying.
@@ -608,15 +532,15 @@ class tool_uploadblocksettings_courseblock {
      * @param integer $weight the weight (optional).
      * @return bool|block_base false if not found, or the requested block instance.
      */
-    public function find_courseblock_instance($blockname, $region = null, $weight = null) {
+    function find_courseblock_instance($blockname, $region = null, $weight = null) {
 
-        // debugging("find_courseblock_instance(blockname = $blockname, region = $region, weight = $weight)", DEBUG_BLOCKSETTINGS);
+        debugging("find_courseblock_instance(blockname = $blockname, region = $region, weight = $weight)", DEBUG_BLOCKSETTINGS);
         if ($region === null) {
             // In a modify operation, we don't know the current region, just the new one, so look everywhere.
             foreach ($this->get_regions() as $region) {
                 foreach ($this->birecordsbyregion[$region] as $blockinstance) {
                     if ($blockinstance->blockname == $blockname) {
-                        // debugging("find_courseblock_instance() -> $blockinstance->id ($blockinstance->blockname, $blockinstance->weight)", DEBUG_BLOCKSETTINGS);
+                        debugging("find_courseblock_instance() -> $blockinstance->id ($blockinstance->blockname, $blockinstance->weight, $blockinstance->blockpositionid)", DEBUG_BLOCKSETTINGS);
                         return $blockinstance;
                     }
                 }
@@ -625,12 +549,86 @@ class tool_uploadblocksettings_courseblock {
             // Loop through list of blocks looking for the one with the right weight.
             foreach ($this->birecordsbyregion[$region] as $blockinstance) {
                 if ($blockinstance->blockname == $blockname && $blockinstance->weight == $weight) {
-                    // debugging("find_courseblock_instance() -> $blockinstance->id ($blockinstance->blockname, $blockinstance->weight)", DEBUG_BLOCKSETTINGS);
+                    debugging("find_courseblock_instance() -> $blockinstance->id ($blockinstance->blockname, $blockinstance->weight, $blockinstance->blockpositionid)", DEBUG_BLOCKSETTINGS);
                     return $blockinstance;
                 }
             }
         }
-        // debugging("find_courseblock_instance() -> false", DEBUG_BLOCKSETTINGS);
+        debugging("find_courseblock_instance() -> false", DEBUG_BLOCKSETTINGS);
         return false;
     }
+
 }
+
+/**
+ * Creates a new instance of the specified block class.
+ *
+ * @param string $blockname the name of the block.
+ * @param $instance block_instances DB table row (optional).
+ * @return block_base the requested block instance.
+ */
+function blocksettings_instance($blockname, $instance = null) {
+    // debugging("blocksettings_instance(blockname = \"$blockname\")", DEBUG_BLOCKSETTINGS);
+    if (!blocksettings_load_class($blockname)) {
+        // debugging("blocksettings_load_class() -> false", DEBUG_BLOCKSETTINGS);
+        return false;
+    }
+    $classname = 'block_' . $blockname;
+    $retval = new $classname;
+
+    // debugging("blocksettings_instance() -> " . str_replace("\n", "", print_r($retval, true)), DEBUG_BLOCKSETTINGS);
+    return $retval;
+}
+
+/**
+ * Load the block class for a particular type of block.
+ *
+ * @param string $blockname the name of the block.
+ * @return boolean success or failure.
+ */
+function blocksettings_load_class($blockname) {
+    global $CFG;
+
+    // debugging("blocksettings_load_class(blockname = \"$blockname\")", DEBUG_BLOCKSETTINGS);
+    if (empty($blockname)) {
+        // debugging("blocksettings_load_class() -> false", DEBUG_BLOCKSETTINGS);
+        return false;
+    }
+
+    $classname = 'block_'.$blockname;
+    if (class_exists($classname)) {
+        // debugging("blocksettings_load_class() -> true", DEBUG_BLOCKSETTINGS);
+        return true;
+    }
+
+    $blockpath = $CFG->dirroot.'/blocks/'.$blockname.'/block_'.$blockname.'.php';
+    if (file_exists($blockpath)) {
+        require_once($CFG->dirroot.'/blocks/moodleblock.class.php');
+        include_once($blockpath);
+    } else {
+        // debugging("$blockname code does not exist in $blockpath", DEBUG_DEVELOPER);
+        // debugging("blocksettings_load_class() -> false", DEBUG_BLOCKSETTINGS);
+        return false;
+    }
+    // debugging("blocksettings_load_class() -> " . class_exists($classname));
+    return class_exists($classname);
+}
+
+/**
+ * Delete a block and its associated data, and remove it from the internal array of block objects.
+ *
+ * @param object $instance a row from the block_instances table
+ */
+function blocksettings_delete_instance($instance) {
+
+    debugging("blocksettings_delete_instance(instance = $instance->id)", DEBUG_BLOCKSETTINGS);
+    // debugging("blocks_delete_instance(): $instance->id, $instance->blockname, $instance->region, $instance->weight", DEBUG_BLOCKSETTINGS);
+    blocks_delete_instance($instance);
+
+    // Remove the instance from the internal array too.
+    debugging("blocksettings_delete_instance(): instanceid = " . ($this->birecordsbyregion[$instance->region][$instance->blockname])->id, DEBUG_BLOCKSETTINGS);
+    unset($this->birecordsbyregion[$instance->region][$instance->blockname]);
+    debugging("blocksettings_delete_instance() -> Done", DEBUG_BLOCKSETTINGS);
+}
+
+

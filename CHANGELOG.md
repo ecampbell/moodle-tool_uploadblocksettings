@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.8.1] - 2018-07-10
+### Added
+- Remove support for update operation.
+
 ## [0.8.0] - 2018-07-03
 ### Added
 - Support comment lines and the course block reset operation.

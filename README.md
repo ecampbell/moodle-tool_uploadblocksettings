@@ -4,9 +4,9 @@ Upload block settings from a CSV file into a range of courses
 
 ## Description ##
 
-The Upload block settings plugin for Moodle allows you to add 
-block settings to a range of courses at the same time. 
-You can also delete existing blocks from a course. 
+The Upload block settings plugin for Moodle allows you to add or remove
+block settings to and from a range of courses at the same time.
+You can also reset the set of course blocks to the default for that course format.
 
 ## Requirements ##
 
@@ -46,7 +46,7 @@ Lines beginning with a '#' or ';' character are comments, and skipped.
 Each line of the file contains one record.  
 Each record is a series of data in a fixed order separated by commas.  
 The required fields are operation, course shortname, block, region, weight.  
-The allowed operations are add, del(ete), res(et), upd(ate).  
+The allowed operations are add, del(ete), and res(et).  
 The allowed regions are side-pre and side-post.  
 The allowed weights are -10 to 10 (0 is neutral).
 

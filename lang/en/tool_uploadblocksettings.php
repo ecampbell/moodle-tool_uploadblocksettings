@@ -34,7 +34,7 @@ $string['blockmoved']            = '{$a->line} {$a->linenum} [{$a->oplabel}]: Bl
 $string['blocknotinstalled']     = '{$a->line} {$a->linenum} [{$a->oplabel}]: Block ({$a->blockname}) not installed. {$a->skipped}.';
 $string['coursenotfound']        = '{$a->line} {$a->linenum} [{$a->oplabel}]: Course "{$a->coursename}" not found. {$a->skipped}.';
 $string['courseblocksreset']     = '{$a->line} {$a->linenum} [{$a->oplabel}]: Course "{$a->coursename}" blocks reset.';
-$string['csvcomment']            = '{$a->line} {$a->linenum} []: Comment. {$a->skipped}.';
+$string['csvcomment']            = '{$a->line} {$a->linenum} [Comment]: {$a->skipped}.';
 $string['csvfile']               = '';
 $string['csvfile_help']          = 'The format of the CSV file must be as follows:
 
@@ -48,7 +48,7 @@ $string['csvfile_help']          = 'The format of the CSV file must be as follow
 $string['fieldscannotbeblank']   = '{$a->line} {$a->linenum} [{$a->oplabel}]: Fields cannot be blank: block ({$a->blockname}), course ($a->coursename), region ($a->region), weight ($a->weight). {$a->skipped}.';
 $string['heading']               = 'Upload course block settings from a CSV file';
 $string['operationnotvalid']     = '{$a->line} {$a->linenum} [{$a->oplabel}]: Operation not valid for block "{$a->blocktitle}" ({$a->blockname}). {$a->skipped}.';
-$string['operationunknown']      = '{$a->line} {$a->linenum} [{$a->oplabel}]: Unknown operation "{$a->op}".';
+$string['operationunknown']      = '{$a->line} {$a->linenum} [{$a->op}]: Unknown operation.';
 $string['pluginname']            = 'Upload block settings';
 $string['pluginname_help']       = 'Upload block settings from a CSV file to set block settings for a range of courses in a single operation.';
 $string['privacy:metadata']      = 'The Upload block settings administration tool does not store personal data.';
