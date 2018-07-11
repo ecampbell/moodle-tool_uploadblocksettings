@@ -83,24 +83,12 @@ if (!$data) { // Display the form.
 
 } else {      // Process the CSV file.
 
-    // Set debug level to a minimum of NORMAL: Show errors, warnings and notices.
-    $debuglevel = $CFG->debug;
-    $debugdisplay = $CFG->debugdisplay;
-    if ($CFG->debug < 15) {
-        $CFG->debug = 15;
-    }
-    $CFG->debugdisplay = true;
-
     // Process the CSV file, reporting issues as we go.
     $handler = new tool_uploadblocksettings_handler($data->csvfile);
     $report = $handler->process();
     echo $report;
 
     echo $OUTPUT->continue_button($url);
-
-    // Done, revert debug level.
-    $CFG->debug = $debuglevel;
-    $CFG->debugdisplay = $debugdisplay;
 }
 
 // Footer.

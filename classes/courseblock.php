@@ -97,7 +97,7 @@ class tool_uploadblocksettings_courseblock {
         $this->context = context_course::instance($course->id);
         // Initialise the block array (birecordsbyregion) with the blocks from this course.
         $this->load_blocks(false);
-        // debugging("tool_uploadblocksettings_courseblock: " . print_r($this->birecordsbyregion, true), DEBUG_BLOCKSETTINGS);
+        debugging("tool_uploadblocksettings_courseblock: " . print_r($this->birecordsbyregion, true), DEBUG_BLOCKSETTINGS);
 
     }
 
@@ -398,6 +398,10 @@ class tool_uploadblocksettings_courseblock {
         $blockinstance->timecreated = time();
         $blockinstance->timemodified = $blockinstance->timecreated;
         $blockinstance->id = $DB->insert_record('block_instances', $blockinstance);
+        
+        // Insert the new block into the internal block array so that it won't be added again.
+        $this->birecordsbyregion[$region][] = $blockinstance;
+        debugging("add_block(blockname = $blockname, region = $region, weight = $weight): " . print_r($this->birecordsbyregion[$region], true), DEBUG_BLOCKSETTINGS);
     }
 
     /**
@@ -441,6 +445,8 @@ class tool_uploadblocksettings_courseblock {
      */
     protected function ensure_instances_exist($region) {
         if (!array_key_exists($region, $this->blockinstances)) {
+            debugging("ensure_instances_exist(region = $region)", DEBUG_BLOCKSETTINGS);
+            debugging("ensure_instances_exist(): region exists = ", array_key_exists($region, $this->birecordsbyregion), DEBUG_BLOCKSETTINGS);
             $this->blockinstances[$region] = $this->create_block_instances($this->birecordsbyregion[$region]);
         }
     }
@@ -524,14 +530,14 @@ function blocksettings_load_class($blockname) {
  */
 function blocksettings_delete_instance($instance) {
 
-    // debugging("blocksettings_delete_instance(instance = $instance->id)", DEBUG_BLOCKSETTINGS);
-    // debugging("blocks_delete_instance(): $instance->id, $instance->blockname, $instance->region, $instance->weight", DEBUG_BLOCKSETTINGS);
+    debugging("blocksettings_delete_instance(instance = $instance->id)", DEBUG_BLOCKSETTINGS);
+    debugging("blocks_delete_instance(): $instance->blockname, $instance->region, $instance->weight", DEBUG_BLOCKSETTINGS);
     blocks_delete_instance($instance);
 
     // Remove the instance from the internal array too.
-    // debugging("blocksettings_delete_instance(): instanceid = " . ($this->birecordsbyregion[$instance->region][$instance->blockname])->id, DEBUG_BLOCKSETTINGS);
+    debugging("blocksettings_delete_instance(): instanceid = " . ($this->birecordsbyregion[$instance->region][$instance->blockname])->id, DEBUG_BLOCKSETTINGS);
     unset($this->birecordsbyregion[$instance->region][$instance->blockname]);
-    // debugging("blocksettings_delete_instance() -> Done", DEBUG_BLOCKSETTINGS);
+     debugging("blocksettings_delete_instance() -> Done", DEBUG_BLOCKSETTINGS);
 }
 
 
