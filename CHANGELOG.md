@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.8.3] - 2018-07-12
+### Added
+- Fix issues identified by code reviewer.
+
 ## [0.8.1] - 2018-07-10
 ### Added
 - Remove support for update operation.

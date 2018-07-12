@@ -43,14 +43,5 @@ $capabilities = array(
         'archetypes' => array(
             'manager' => CAP_ALLOW
         )
-    ),
-
-    'tool/uploadblocksettings:use' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'manager' => CAP_ALLOW
-        )
     )
-
 );
