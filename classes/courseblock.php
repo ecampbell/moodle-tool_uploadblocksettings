@@ -50,11 +50,10 @@ class tool_uploadblocksettings_courseblock {
     private $context;
 
     /** @var array region name => 1.*/
-    // protected $regions = array();
     protected $regions = array(BLOCK_POS_LEFT => "1", BLOCK_POS_RIGHT => "1");
 
     /** @var string the region where new blocks are added.*/
-    protected $defaultregion;
+    protected $defaultregion = BLOCK_POS_RIGHT;
 
     /** @var array will be $DB->get_records('blocks') */
     protected $allblocks = null;
@@ -85,20 +84,16 @@ class tool_uploadblocksettings_courseblock {
      * @param string $filename
      */
     public function __construct($course) {
-        $this->course = $course;
 
-        // Define regions.
+        $this->course = $course;
+        // Get the course context so that we can identify its block instances.
+        $this->context = context_course::instance($course->id);
+        // Initialise the block array with the blocks from this course.
+        $this->load_blocks(false);
+
         foreach ($this->get_regions() as $region) {
             $this->ensure_instances_exist($region);
         }
-        $this->defaultregion = BLOCK_POS_RIGHT;
-
-        // Get the course context so that we can identify its block instances.
-        $this->context = context_course::instance($course->id);
-        // Initialise the block array (birecordsbyregion) with the blocks from this course.
-        $this->load_blocks(false);
-
-
     }
 
     /**
@@ -118,10 +113,12 @@ class tool_uploadblocksettings_courseblock {
      * @return array block name => record from block table.
      */
     public function get_addable_blocks() {
-
+        $trace = new null_progress_trace();
+        $trace->output("get_addable_blocks()");
 
         if (!is_null($this->addableblocks)) {
-
+            $trace->output("get_addable_blocks() -> " . print_r($this->addableblocks, true));
+            $trace->finished();
             return $this->addableblocks;
         }
 
@@ -129,6 +126,8 @@ class tool_uploadblocksettings_courseblock {
         $this->addableblocks = array();
         $allblocks = $this->get_installed_blocks();
         if (empty($allblocks)) {
+            $trace->output("get_addable_blocks() -> null");
+            $trace->finished();
             return $this->addableblocks;
         }
 
@@ -146,7 +145,8 @@ class tool_uploadblocksettings_courseblock {
             }
         }
         core_collator::asort_objects_by_property($this->addableblocks, 'title');
-
+        $trace->output("get_addable_blocks() -> " . str_replace("\n", "", print_r($this->addableblocks, true)));
+        $trace->finished();
         return $this->addableblocks;
     }
 
@@ -158,7 +158,6 @@ class tool_uploadblocksettings_courseblock {
      */
     public function is_block_present($blockname) {
         if (empty($this->blockinstances)) {
-
             return false;
         }
 
@@ -246,6 +245,8 @@ class tool_uploadblocksettings_courseblock {
         $undeletableblocks = false;
         if (isset($CFG->undeletableblocktypes)) {
             $undeletableblocks = $CFG->undeletableblocktypes;
+        } else {
+            $undeletableblocks = 'settings,navigation';
         }
 
         if (empty($undeletableblocks)) {
@@ -344,19 +345,12 @@ class tool_uploadblocksettings_courseblock {
                     bi.id";
         $blockinstances = $DB->get_recordset_sql($sql, $params + $parentcontextparams + $pagetypepatternparams);
 
-
-
-
         $this->birecordsbyregion = $this->prepare_per_region_arrays();
         $unknown = array();
         foreach ($blockinstances as $bi) {
             context_helper::preload_from_record($bi);
             if ($this->is_known_region($bi->region)) {
                 $this->birecordsbyregion[$bi->region][] = $bi;
-
-
-
-
             } else {
                 $unknown[] = $bi;
             }
@@ -369,7 +363,6 @@ class tool_uploadblocksettings_courseblock {
             $this->birecordsbyregion[$this->defaultregion] = array_merge(
                     $this->birecordsbyregion[$this->defaultregion], $unknown);
         }
-
     }
 
     /**
@@ -380,28 +373,32 @@ class tool_uploadblocksettings_courseblock {
      * @param integer $weight determines the order where this block appears in the region.
      */
     public function add_block($blockname, $region, $weight) {
-        global $DB;
+        global $DB, $CFG;
 
-        if (empty($pagetypepattern)) {
-            $pagetypepattern = 'course-view-*';
-        }
+        $trace = new null_progress_trace();
+        $trace->output("add_block(blockname = " . $blockname . ", region = " . $region . ", weight = " . $weight . ")");
 
         $blockinstance = new stdClass;
         $blockinstance->blockname = $blockname;
         $blockinstance->parentcontextid = $this->context->id;
         $blockinstance->showinsubcontexts = false;
-        $blockinstance->pagetypepattern = $pagetypepattern;
+        $blockinstance->pagetypepattern = 'course-view-*';
         $blockinstance->subpagepattern = null;
         $blockinstance->defaultregion = $region;
         $blockinstance->defaultweight = $weight;
         $blockinstance->configdata = '';
-        $blockinstance->timecreated = time();
-        $blockinstance->timemodified = $blockinstance->timecreated;
+        if ($CFG->version > 2017111300) {
+            $blockinstance->timecreated = time();
+            $blockinstance->timemodified = $blockinstance->timecreated;
+        }
+        $trace->output("add_block(): blockinstance = " . print_r($blockinstance, true));
         $blockinstance->id = $DB->insert_record('block_instances', $blockinstance);
-        
-        // Insert the new block into the internal block array so that it won't be added again.
-        $this->birecordsbyregion[$region][] = $blockinstance;
 
+        $trace->output("add_block(): blockinstance->id = " . $blockinstance->id);
+        $trace->finished();
+
+        // Ensure the block context is created.
+        context_block::instance($blockinstance->id);
     }
 
     /**
@@ -415,7 +412,6 @@ class tool_uploadblocksettings_courseblock {
         foreach ($this->regions as $region => $notused) {
             $result[$region] = array();
         }
-
         return $result;
     }
 
@@ -426,15 +422,12 @@ class tool_uploadblocksettings_courseblock {
      * @return array An array of instantiated block_instance objects
      */
     protected function create_block_instances($birecords) {
-
         $results = array();
         foreach ($birecords as $record) {
             if ($blockobject = block_instance($record->blockname, $record)) {
-
                 $results[] = $blockobject;
             }
         }
-
         return $results;
     }
 
@@ -444,10 +437,10 @@ class tool_uploadblocksettings_courseblock {
      * @param string $region Check for bi's with the instance with this name
      */
     protected function ensure_instances_exist($region) {
+
         if (!array_key_exists($region, $this->blockinstances)) {
-
-
-            $this->blockinstances[$region] = $this->create_block_instances($this->birecordsbyregion[$region]);
+            $this->blockinstances[$region] = 
+                    $this->create_block_instances($this->birecordsbyregion[$region]);
         }
     }
 
@@ -461,29 +454,21 @@ class tool_uploadblocksettings_courseblock {
      * @param integer $weight the weight (optional).
      * @return bool|block_base false if not found, or the requested block instance.
      */
-    function find_courseblock_instance($blockname, $region = null, $weight = null) {
+    public function find_courseblock_instance($blockname, $region = null, $weight = null) {
 
-
-        if ($region === null) {
-            // In a modify operation, we don't know the current region, just the new one, so look everywhere.
-            foreach ($this->get_regions() as $region) {
-                foreach ($this->birecordsbyregion[$region] as $blockinstance) {
-                    if ($blockinstance->blockname == $blockname) {
-
-                        return $blockinstance;
-                    }
-                }
-            }
-        } else {
-            // Loop through list of blocks looking for the one with the right weight.
-            foreach ($this->birecordsbyregion[$region] as $blockinstance) {
-                if ($blockinstance->blockname == $blockname && $blockinstance->weight == $weight) {
-
-                    return $blockinstance;
-                }
+        $trace = new null_progress_trace();
+        $trace->output("find_courseblock_instance(blockname = " . $blockname . ", region = " . $region . ", $weight = " . $weight . ")");
+        // Loop through list of blocks looking for the one with the right weight.
+        foreach ($this->birecordsbyregion[$region] as $blockinstance) {
+            $trace->output("find_courseblock_instance(): block name = " . $blockinstance->blockname . "; region = " . $blockinstance->region . "; weight = " . $blockinstance->weight);
+            if ($blockinstance->blockname == $blockname && $blockinstance->weight == $weight) {
+                $trace->output("find_courseblock_instance() -> " . str_replace("\n", "", print_r($blockinstance, true)));
+                $trace->finished();
+                return $blockinstance;
             }
         }
-
+        $trace->output("find_courseblock_instance() -> false");
+        $trace->finished();
         return false;
     }
 
@@ -498,15 +483,12 @@ class tool_uploadblocksettings_courseblock {
 function blocksettings_load_class($blockname) {
     global $CFG;
 
-
     if (empty($blockname)) {
-
         return false;
     }
 
     $classname = 'block_'.$blockname;
     if (class_exists($classname)) {
-
         return true;
     }
 
@@ -515,8 +497,6 @@ function blocksettings_load_class($blockname) {
         require_once($CFG->dirroot.'/blocks/moodleblock.class.php');
         include_once($blockpath);
     } else {
-
-
         return false;
     }
 
@@ -524,20 +504,14 @@ function blocksettings_load_class($blockname) {
 }
 
 /**
- * Delete a block and its associated data, and remove it from the internal array of block objects.
+ * Delete a block, and associated data.
  *
  * @param object $instance a row from the block_instances table
  */
 function blocksettings_delete_instance($instance) {
 
-
-
+    $trace = new null_progress_trace();
+    $trace->output("blocksettings_delete_instance(instance = " . print_r($instance, true) . ")");
+    $trace->finished();
     blocks_delete_instance($instance);
-
-    // Remove the instance from the internal array too.
-
-    unset($this->birecordsbyregion[$instance->region][$instance->blockname]);
-
 }
-
-

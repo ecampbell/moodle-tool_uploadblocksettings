@@ -1,6 +1,14 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.8.5] - 2018-08-14
+### Added
+- Finally working properly on Moodle 3.4/3.5.
+
+## [0.8.4] - 2018-08-14
+### Added
+- Remove debugging info, get it working properly on Moodle 3.1.
+
 ## [0.8.3] - 2018-07-12
 ### Added
 - Fix issues identified by code reviewer.
