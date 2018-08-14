@@ -240,7 +240,9 @@ class tool_uploadblocksettings_handler {
                     $report[] = get_string('blockinstancenotfound', 'tool_uploadblocksettings', $strings);
                     continue;
                 }
-                $courseblock->blocks_delete_instance($bi);
+                blocksettings_delete_instance($bi);
+                // blocks_delete_instance($bi);
+                // $courseblock->blocks_delete_instance($bi);
                 $report[] = get_string('blockdeleted', 'tool_uploadblocksettings', $strings);
             } else if ($op == 'add') {
                 // Check that the block can be added to the course.
