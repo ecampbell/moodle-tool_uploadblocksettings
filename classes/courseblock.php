@@ -106,7 +106,6 @@ class tool_uploadblocksettings_courseblock {
         return array_keys($this->regions);
     }
 
-
     /**
      * The list of block types that may be added to this page.
      *
@@ -271,7 +270,6 @@ class tool_uploadblocksettings_courseblock {
      */
     public function load_blocks($includeinvisible = null) {
         global $DB;
-
 
         if (!is_null($this->birecordsbyregion)) {
             // Already done.
@@ -439,7 +437,7 @@ class tool_uploadblocksettings_courseblock {
     protected function ensure_instances_exist($region) {
 
         if (!array_key_exists($region, $this->blockinstances)) {
-            $this->blockinstances[$region] = 
+            $this->blockinstances[$region] =
                     $this->create_block_instances($this->birecordsbyregion[$region]);
         }
     }

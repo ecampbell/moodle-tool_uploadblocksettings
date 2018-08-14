@@ -241,7 +241,6 @@ class tool_uploadblocksettings_handler {
                     continue;
                 }
                 blocksettings_delete_instance($bi);
-                // blocks_delete_instance($bi);
                 $report[] = get_string('blockdeleted', 'tool_uploadblocksettings', $strings);
             } else if ($op == 'add') {
                 // Check that the block can be added to the course.
