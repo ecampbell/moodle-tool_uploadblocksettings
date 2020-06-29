@@ -116,7 +116,7 @@ class tool_uploadblocksettings_courseblock {
         $trace->output("get_addable_blocks()");
 
         if (!is_null($this->addableblocks)) {
-            $trace->output("get_addable_blocks() -> " . print_r($this->addableblocks, true));
+            $trace->output("get_addable_blocks() -> " . var_export($this->addableblocks, true));
             $trace->finished();
             return $this->addableblocks;
         }
@@ -144,7 +144,7 @@ class tool_uploadblocksettings_courseblock {
             }
         }
         core_collator::asort_objects_by_property($this->addableblocks, 'title');
-        $trace->output("get_addable_blocks() -> " . str_replace("\n", "", print_r($this->addableblocks, true)));
+        $trace->output("get_addable_blocks() -> " . str_replace("\n", "", var_export($this->addableblocks, true)));
         $trace->finished();
         return $this->addableblocks;
     }
@@ -389,7 +389,7 @@ class tool_uploadblocksettings_courseblock {
             $blockinstance->timecreated = time();
             $blockinstance->timemodified = $blockinstance->timecreated;
         }
-        $trace->output("add_block(): blockinstance = " . print_r($blockinstance, true));
+        $trace->output("add_block(): blockinstance = " . var_export($blockinstance, true));
         $blockinstance->id = $DB->insert_record('block_instances', $blockinstance);
 
         $trace->output("add_block(): blockinstance->id = " . $blockinstance->id);
@@ -455,12 +455,14 @@ class tool_uploadblocksettings_courseblock {
     public function find_courseblock_instance($blockname, $region = null, $weight = null) {
 
         $trace = new null_progress_trace();
-        $trace->output("find_courseblock_instance(blockname = " . $blockname . ", region = " . $region . ", $weight = " . $weight . ")");
+        $trace->output("find_courseblock_instance(blockname = " . $blockname .
+            ", region = " . $region . ", $weight = " . $weight . ")");
         // Loop through list of blocks looking for the one with the right weight.
         foreach ($this->birecordsbyregion[$region] as $blockinstance) {
-            $trace->output("find_courseblock_instance(): block name = " . $blockinstance->blockname . "; region = " . $blockinstance->region . "; weight = " . $blockinstance->weight);
+            $trace->output("find_courseblock_instance(): block name = " . $blockinstance->blockname .
+                "; region = " . $blockinstance->region . "; weight = " . $blockinstance->weight);
             if ($blockinstance->blockname == $blockname && $blockinstance->weight == $weight) {
-                $trace->output("find_courseblock_instance() -> " . str_replace("\n", "", print_r($blockinstance, true)));
+                $trace->output("find_courseblock_instance() -> " . str_replace("\n", "", var_export($blockinstance, true)));
                 $trace->finished();
                 return $blockinstance;
             }
@@ -509,7 +511,7 @@ function blocksettings_load_class($blockname) {
 function blocksettings_delete_instance($instance) {
 
     $trace = new null_progress_trace();
-    $trace->output("blocksettings_delete_instance(instance = " . print_r($instance, true) . ")");
+    $trace->output("blocksettings_delete_instance(instance = " . var_export($instance, true) . ")");
     $trace->finished();
     blocks_delete_instance($instance);
 }
