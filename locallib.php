@@ -124,7 +124,7 @@ class tool_uploadblocksettings_handler {
             $strings->linenum = $line;
 
             // Skip any comment lines starting with # or ;.
-            if ($csvrow[0][0] == '#' or $csvrow[0][0] == ';') {
+            if ($csvrow[0][0] == '#' || $csvrow[0][0] == ';') {
                 $report[] = get_string('csvcomment', 'tool_uploadblocksettings', $strings);
                 continue;
             }
@@ -165,14 +165,14 @@ class tool_uploadblocksettings_handler {
 
             // Check the line is valid and if not, add a message to the report and skip it.
 
-            // Check that the row specifies an operation and a course.
-            if ($op == '' or $courseshortname == '') {
-                $report[] = get_string('fieldscannotbeblank', 'tool_uploadblocksettings', $strings);
-                continue;
-            }
             // Check that the operation is valid.
             if (!in_array($op, array('add', 'del', 'res'))) {
                 $report[] = get_string('operationunknown', 'tool_uploadblocksettings', $strings);
+                continue;
+            }
+            // Check that the row specifies a course.
+            if ($courseshortname == '') {
+                $report[] = get_string('coursenotspecified', 'tool_uploadblocksettings', $strings);
                 continue;
             }
             // Check that the specified course exists.
@@ -200,9 +200,14 @@ class tool_uploadblocksettings_handler {
                 continue;
             }
 
-            // Check that the row specifies a block, region and weight.
-            if ($blockname == '' or $region == '' or $weight == '') {
-                $report[] = get_string('fieldscannotbeblank', 'tool_uploadblocksettings', $strings);
+            // Check that the row specifies a block.
+            if ($blockname == '') {
+                $report[] = get_string('blocknotspecified', 'tool_uploadblocksettings', $strings);
+                continue;
+            }
+            // Check that the row specifies a region.
+            if ($region == '') {
+                $report[] = get_string('regionnotspecified', 'tool_uploadblocksettings', $strings);
                 continue;
             }
             // Check that a valid block is specified, and get its name if it is.

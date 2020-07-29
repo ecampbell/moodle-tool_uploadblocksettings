@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2020-07-29
+### Added
+- Fixed invalid error message when weight set to 0
+
 ## [1.0.0] - 2018-08-14
 ### Added
 - Finally working properly on Moodle 3.4/3.5.

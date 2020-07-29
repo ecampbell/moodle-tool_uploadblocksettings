@@ -112,6 +112,7 @@ class tool_uploadblocksettings_courseblock {
      * @return array block name => record from block table.
      */
     public function get_addable_blocks() {
+        // Change null_progress_trace to html_progress_trace for debugging.
         $trace = new null_progress_trace();
         $trace->output("get_addable_blocks()");
 
