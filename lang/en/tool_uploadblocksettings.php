@@ -36,19 +36,20 @@ $string['blocknotspecified']     = '{$a->line} {$a->linenum} [{$a->oplabel}]: Bl
 $string['coursenotfound']        = '{$a->line} {$a->linenum} [{$a->oplabel}]: Course "{$a->coursename}" not found. {$a->skipped}.';
 $string['coursenotspecified']    = '{$a->line} {$a->linenum} [{$a->oplabel}]: Course not specified. {$a->skipped}.';
 $string['courseblocksreset']     = '{$a->line} {$a->linenum} [{$a->oplabel}]: Course "{$a->coursename}" blocks reset.';
-$string['csvcomment']            = '{$a->line} {$a->linenum} [Comment]: {$a->skipped}.';
 $string['csvfile']               = '';
-$string['csvfile_help']          = 'The format of the CSV file must be as follows:
+$string['csvfile_help']          = 'The format of the CSV file is as follows:
 
 * Lines beginning with a # or ; character are comments, and skipped.
 * Each line of the file contains one record.
-* Each record is a series of data in a fixed order separated by commas.
+* Each record is a series of data in any order separated by commas or other standard delimiters.
 * The required fields are operation, course shortname, block, region, weight.
 * The allowed operations are add, del(ete), res(et), upd(ate).
 * The allowed regions are side-pre and side-post.
 * The allowed weights are -10 to 10 (0 is neutral)';
 $string['fieldscannotbeblank']   = '{$a->line} {$a->linenum} [{$a->oplabel}]: Fields cannot be blank: block ({$a->blockname}), course ({$a->coursename}), region ({$a->region}), weight ({$a->weight}). {$a->skipped}.';
 $string['heading']               = 'Upload course block settings from a CSV file';
+$string['methodstotal']          = '';
+$string['operation']             = '';
 $string['operationnotvalid']     = '{$a->line} {$a->linenum} [{$a->oplabel}]: Operation not valid for block "{$a->blocktitle}" ({$a->blockname}). {$a->skipped}.';
 $string['operationunknown']      = '{$a->line} {$a->linenum} [{$a->op}]: Unknown operation.';
 $string['pluginname']            = 'Upload block settings';
@@ -56,7 +57,8 @@ $string['pluginname_help']       = 'Upload block settings from a CSV file to set
 $string['privacy:metadata']      = 'The Upload block settings administration tool does not store personal data.';
 $string['regionnotspecified']    = '{$a->line} {$a->linenum} [{$a->oplabel}]: Region not specified. {$a->skipped}.';
 $string['regionnotvalid']        = '{$a->line} {$a->linenum} [{$a->oplabel}]: Region "{$a->region}" is unknown. {$a->skipped}.';
-$string['toofewcols']            = '{$a->line} {$a->linenum}: Too few columns, expecting 5. {$a->skipped}.';
-$string['toomanycols']           = '{$a->line} {$a->linenum}: Too many columns, expecting 5. {$a->skipped}.';
+$string['region']				 = '';
+$string['results']               = '';
+$string['weight']				 = '';
 $string['weightnotspecified']    = '{$a->line} {$a->linenum} [{$a->oplabel}]: Weight not specified. {$a->skipped}.';
 $string['weightnotvalid']        = '{$a->line} {$a->linenum} [{$a->oplabel}]: Weight "{$a->weight}" is not valid. {$a->skipped}.';
