@@ -24,6 +24,7 @@
 
 require_once(__DIR__.'/../../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->libdir . '/csvlib.class.php');
 
 // Include our function library.
 $pluginname = 'uploadblocksettings';
@@ -36,7 +37,7 @@ global $CFG, $OUTPUT, $USER, $SITE, $PAGE;
 $homeurl = new moodle_url('/');
 require_login();
 if (!is_siteadmin()) {
-    redirect($homeurl, "This feature is only available for site administrators.", 5);
+    redirect($homeurl, get_string('adminonly', 'badges', 5));
 }
 
 // URL Parameters.
@@ -56,11 +57,6 @@ if ($CFG->branch >= 25) { // Moodle 2.5+.
     $context = get_system_context();
 }
 
-$PAGE->set_pagelayout('admin');
-$PAGE->set_url($url);
-$PAGE->set_context($context);
-$PAGE->set_title($title);
-$PAGE->set_heading($heading);
 admin_externalpage_setup('tool_'.$pluginname); // Sets the navbar & expands navmenu.
 
 // Set up the form.
@@ -73,22 +69,34 @@ echo $OUTPUT->header();
 
 // Display or process the form.
 
-$data = $form->get_data();
-if (!$data) { // Display the form.
+if ($data = $form->get_data()) {
+    // Process the CSV file.
+    $importid = csv_import_reader::get_new_iid($pluginname);
+    $cir = new csv_import_reader($importid, $pluginname);
+    $content = $form->get_file_content('csvfile');
+    $readcount = $cir->load_csv_content($content, $data->encoding, $data->delimiter_name);
+    unset($content);
+    if ($readcount === false) {
+        print_error('csvfileerror', 'tool_uploadcourse', $url, $cir->get_error());
+    } else if ($readcount == 0) {
+        print_error('csvemptyfile', 'error', $url, $cir->get_error());
+    }
+
+    // We've got a live file with some entries, so process it.
+    $processor = new tool_uploadblocksettings_processor($cir);
+    echo $OUTPUT->heading(get_string('results', 'tool_uploadblocksettings'));
+    $processor->execute();
+
+    echo $OUTPUT->continue_button($url);
+} else {
+    // Display the form.
 
     echo $OUTPUT->heading($heading);
 
-    // Display the form.
     $form->display();
 
-} else {      // Process the CSV file.
-
-    // Process the CSV file, reporting issues as we go.
-    $handler = new tool_uploadblocksettings_handler($data->csvfile);
-    $report = $handler->process();
-    echo $report;
-
-    echo $OUTPUT->continue_button($url);
+    echo $OUTPUT->footer();
+        die();
 }
 
 // Footer.
