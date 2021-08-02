@@ -79,9 +79,9 @@ class tool_uploadblocksettings_courseblock {
     protected $blockinstances = array();
 
     /**
-     * Constructor, sets the filename
+     * Constructor, sets the course
      *
-     * @param string $filename
+     * @param string $course
      */
     public function __construct($course) {
 
@@ -112,12 +112,8 @@ class tool_uploadblocksettings_courseblock {
      * @return array block name => record from block table.
      */
     public function get_addable_blocks() {
-        $trace = new null_progress_trace();
-        $trace->output("get_addable_blocks()");
 
         if (!is_null($this->addableblocks)) {
-            $trace->output("get_addable_blocks() -> " . print_r($this->addableblocks, true));
-            $trace->finished();
             return $this->addableblocks;
         }
 
@@ -125,8 +121,6 @@ class tool_uploadblocksettings_courseblock {
         $this->addableblocks = array();
         $allblocks = $this->get_installed_blocks();
         if (empty($allblocks)) {
-            $trace->output("get_addable_blocks() -> null");
-            $trace->finished();
             return $this->addableblocks;
         }
 
@@ -144,8 +138,6 @@ class tool_uploadblocksettings_courseblock {
             }
         }
         core_collator::asort_objects_by_property($this->addableblocks, 'title');
-        $trace->output("get_addable_blocks() -> " . str_replace("\n", "", print_r($this->addableblocks, true)));
-        $trace->finished();
         return $this->addableblocks;
     }
 
@@ -373,9 +365,6 @@ class tool_uploadblocksettings_courseblock {
     public function add_block($blockname, $region, $weight) {
         global $DB, $CFG;
 
-        $trace = new null_progress_trace();
-        $trace->output("add_block(blockname = " . $blockname . ", region = " . $region . ", weight = " . $weight . ")");
-
         $blockinstance = new stdClass;
         $blockinstance->blockname = $blockname;
         $blockinstance->parentcontextid = $this->context->id;
@@ -389,11 +378,7 @@ class tool_uploadblocksettings_courseblock {
             $blockinstance->timecreated = time();
             $blockinstance->timemodified = $blockinstance->timecreated;
         }
-        $trace->output("add_block(): blockinstance = " . print_r($blockinstance, true));
         $blockinstance->id = $DB->insert_record('block_instances', $blockinstance);
-
-        $trace->output("add_block(): blockinstance->id = " . $blockinstance->id);
-        $trace->finished();
 
         // Ensure the block context is created.
         context_block::instance($blockinstance->id);
@@ -454,19 +439,12 @@ class tool_uploadblocksettings_courseblock {
      */
     public function find_courseblock_instance($blockname, $region = null, $weight = null) {
 
-        $trace = new null_progress_trace();
-        $trace->output("find_courseblock_instance(blockname = " . $blockname . ", region = " . $region . ", $weight = " . $weight . ")");
         // Loop through list of blocks looking for the one with the right weight.
         foreach ($this->birecordsbyregion[$region] as $blockinstance) {
-            $trace->output("find_courseblock_instance(): block name = " . $blockinstance->blockname . "; region = " . $blockinstance->region . "; weight = " . $blockinstance->weight);
             if ($blockinstance->blockname == $blockname && $blockinstance->weight == $weight) {
-                $trace->output("find_courseblock_instance() -> " . str_replace("\n", "", print_r($blockinstance, true)));
-                $trace->finished();
                 return $blockinstance;
             }
         }
-        $trace->output("find_courseblock_instance() -> false");
-        $trace->finished();
         return false;
     }
 
@@ -507,9 +485,5 @@ function blocksettings_load_class($blockname) {
  * @param object $instance a row from the block_instances table
  */
 function blocksettings_delete_instance($instance) {
-
-    $trace = new null_progress_trace();
-    $trace->output("blocksettings_delete_instance(instance = " . print_r($instance, true) . ")");
-    $trace->finished();
     blocks_delete_instance($instance);
 }
