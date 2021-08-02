@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.0.3] - 2021-08-02
+### Added
+- Fix more coding style warnings
+
 ## [1.0.2] - 2021-08-02
 ### Added
 - Fix coding style warnings, remove debugging (trace)

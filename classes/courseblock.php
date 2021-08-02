@@ -61,7 +61,7 @@ class tool_uploadblocksettings_courseblock {
     /**
      * @var array blocks that this user can add to this page. Will be a subset
      * of $allblocks, but with array keys block->name. Access this via the
-     * {@link get_addable_blocks()} method to ensure it is lazy-loaded.
+     * get_addable_blocks() method to ensure it is lazy-loaded.
      */
     protected $addableblocks = null;
 
