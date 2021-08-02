@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 2021-08-02
+### Added
+- Fix coding style warnings, remove debugging (trace)
+
 ## [1.0.1] - 2020-07-29
 ### Added
 - Fixed invalid error message when weight set to 0
