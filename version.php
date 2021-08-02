@@ -27,5 +27,5 @@ defined('MOODLE_INTERNAL') || die();
 $plugin->component = 'tool_uploadblocksettings';
 $plugin->version   = 2021080200;        // The current module version (Date: YYYYMMDDXX).
 $plugin->requires  = 2015051101;        // Requires Moodle version 2.9.
-$plugin->release   = '1.0.1';
+$plugin->release   = '1.0.2';
 $plugin->maturity  = MATURITY_STABLE;

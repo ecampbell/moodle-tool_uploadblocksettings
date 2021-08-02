@@ -43,9 +43,9 @@ class uploadblocksettings_form extends moodleform {
         $mform->addElement('html', '<p>'.get_string('pluginname_help', 'tool_uploadblocksettings').'</p>');
 
         // Insert a File picker element.
-        $this->_form->addElement('filepicker', 'csvfile', get_string('file'));
-        $this->_form->addHelpButton('csvfile', 'csvfile', 'tool_uploadblocksettings');
-        $this->_form->addRule('csvfile', null, 'required', null, 'client');
+        $mform->addElement('filepicker', 'csvfile', get_string('file'));
+        $mform->addHelpButton('csvfile', 'csvfile', 'tool_uploadblocksettings');
+        $mform->addRule('csvfile', null, 'required', null, 'client');
 
         // Standard buttons.
         $this->add_action_buttons(true, get_string('uploadthisfile'));

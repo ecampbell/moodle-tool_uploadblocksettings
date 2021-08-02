@@ -143,7 +143,6 @@ class tool_uploadblocksettings_courseblock {
 
     /**
      * Given a block name, find out of any of them are currently present in the course
-
      * @param string $blockname - the basic name of a block (eg "navigation")
      * @return boolean - is there one of these blocks in the current course?
      */
