@@ -24,8 +24,6 @@
 
 namespace tool_uploadblocksettings\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Privacy Subsystem for tool_uploadblocksettings implementing null_provider.
  *

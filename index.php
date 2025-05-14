@@ -64,7 +64,7 @@ $PAGE->set_heading($heading);
 admin_externalpage_setup('tool_'.$pluginname); // Sets the navbar & expands navmenu.
 
 // Set up the form.
-$form = new uploadblocksettings_form(null, array('fromdefault' => ''));
+$form = new uploadblocksettings_form(null, ['fromdefault' => '']);
 if ($form->is_cancelled()) {
     redirect($homeurl);
 }

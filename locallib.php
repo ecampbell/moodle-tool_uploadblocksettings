@@ -100,7 +100,7 @@ class tool_uploadblocksettings_handler {
      */
     public function process() {
         global $DB, $CFG;
-        $report = array();
+        $report = [];
 
         // Set a counter so we can report line numbers for errors.
         $line = 0;
@@ -166,7 +166,7 @@ class tool_uploadblocksettings_handler {
             // Check the line is valid and if not, add a message to the report and skip it.
 
             // Check that the operation is valid.
-            if (!in_array($op, array('add', 'del', 'res'))) {
+            if (!in_array($op, ['add', 'del', 'res'])) {
                 $report[] = get_string('operationunknown', 'tool_uploadblocksettings', $strings);
                 continue;
             }
@@ -176,7 +176,7 @@ class tool_uploadblocksettings_handler {
                 continue;
             }
             // Check that the specified course exists.
-            if (!$course = $DB->get_record('course', array('shortname' => $courseshortname))) {
+            if (!$course = $DB->get_record('course', ['shortname' => $courseshortname])) {
                 $report[] = get_string('coursenotfound', 'tool_uploadblocksettings', $strings);
                 continue;
             }

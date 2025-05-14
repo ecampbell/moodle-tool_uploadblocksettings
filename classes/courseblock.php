@@ -22,9 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
-define('DEBUG_BLOCKSETTINGS', E_ALL);
-
 /**
  * Utilities for checking course blocks
  *
@@ -50,7 +47,7 @@ class tool_uploadblocksettings_courseblock {
     private $context;
 
     /** @var array region name => 1.*/
-    protected $regions = array(BLOCK_POS_LEFT => "1", BLOCK_POS_RIGHT => "1");
+    protected $regions = [BLOCK_POS_LEFT => "1", BLOCK_POS_RIGHT => "1"];
 
     /** @var string the region where new blocks are added.*/
     protected $defaultregion = BLOCK_POS_RIGHT;
@@ -76,7 +73,7 @@ class tool_uploadblocksettings_courseblock {
      * the ensure_instances_exist method.
      * @var array
      */
-    protected $blockinstances = array();
+    protected $blockinstances = [];
 
     /**
      * Constructor, sets the course
@@ -118,7 +115,7 @@ class tool_uploadblocksettings_courseblock {
         }
 
         // Lazy load.
-        $this->addableblocks = array();
+        $this->addableblocks = [];
         $allblocks = $this->get_installed_blocks();
         if (empty($allblocks)) {
             return $this->addableblocks;
@@ -241,7 +238,7 @@ class tool_uploadblocksettings_courseblock {
 
         if (empty($undeletableblocks)) {
 
-            return array();
+            return [];
         } else if (is_string($undeletableblocks)) {
 
             return explode(',', $undeletableblocks);
@@ -277,7 +274,7 @@ class tool_uploadblocksettings_courseblock {
         }
         // Ignore context blocks too.
         $contexttest = 'bi.parentcontextid IN (:contextid2, :contextid3)';
-        $parentcontextparams = array();
+        $parentcontextparams = [];
         $pagetypepatterns = matching_page_type_patterns('course-view-*');
         list($pagetypepatterntest,
             $pagetypepatternparams) = $DB->get_in_or_equal($pagetypepatterns, SQL_PARAMS_NAMED, 'pagetypepatterntest');
@@ -286,7 +283,7 @@ class tool_uploadblocksettings_courseblock {
         $ccjoin = "LEFT JOIN {context} ctx ON (ctx.instanceid = bi.id AND ctx.contextlevel = :contextlevel)";
 
         $systemcontext = context_system::instance();
-        $params = array(
+        $params = [
             'contextlevel' => CONTEXT_BLOCK,
             'subpage1' => '',
             'subpage2' => '',
@@ -295,7 +292,7 @@ class tool_uploadblocksettings_courseblock {
             'contextid3' => $systemcontext->id,
             'pagetype' => 'course-view-*',
             'pagetype2' => '*', // Make the SQL work by catching Administration and Navigation blocks too.
-        );
+        ];
         if ('subpage' === '') {
             $params['subpage1'] = '';
             $params['subpage2'] = '';
@@ -335,7 +332,7 @@ class tool_uploadblocksettings_courseblock {
         $blockinstances = $DB->get_recordset_sql($sql, $params + $parentcontextparams + $pagetypepatternparams);
 
         $this->birecordsbyregion = $this->prepare_per_region_arrays();
-        $unknown = array();
+        $unknown = [];
         foreach ($blockinstances as $bi) {
             context_helper::preload_from_record($bi);
             if ($this->is_known_region($bi->region)) {
@@ -390,9 +387,9 @@ class tool_uploadblocksettings_courseblock {
      * values are empty arrays.
      */
     protected function prepare_per_region_arrays() {
-        $result = array();
+        $result = [];
         foreach ($this->regions as $region => $notused) {
-            $result[$region] = array();
+            $result[$region] = [];
         }
         return $result;
     }
@@ -404,7 +401,7 @@ class tool_uploadblocksettings_courseblock {
      * @return array An array of instantiated block_instance objects
      */
     protected function create_block_instances($birecords) {
-        $results = array();
+        $results = [];
         foreach ($birecords as $record) {
             if ($blockobject = block_instance($record->blockname, $record)) {
                 $results[] = $blockobject;
