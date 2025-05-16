@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.0.4] - 2025-05-16
+### Added
+- Update for PHP 8 and code styling compatibility
+
 ## [1.0.3] - 2021-08-02
 ### Added
 - Fix more coding style warnings
